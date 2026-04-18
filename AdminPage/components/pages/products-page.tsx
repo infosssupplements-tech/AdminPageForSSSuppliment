@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useData } from "@/lib/data-store"
 import type { Product } from "@/lib/types"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
@@ -431,8 +432,7 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
 }
 
 export function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const { products, addProduct, updateProduct, deleteProduct } = useData()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -440,60 +440,37 @@ export function ProductsPage() {
   const [detailProduct, setDetailProduct] = useState<Product | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadProducts()
-  }, [])
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true)
-      console.log('Loading products...')
-      const response = await fetch('/api/admin/products/?page_size=500')
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Products loaded:', data)
-        setProducts(data.data || [])
-      } else {
-        const errorData = await response.json()
-        console.error('Failed to load products:', errorData)
-      }
-    } catch (error) {
-      console.error('Network error loading products:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSave = (data: Partial<Product>) => {
-    const apiCall = selectedProduct
-      ? fetch(`/api/admin/products/${selectedProduct._id}/`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-      : fetch('/api/admin/products/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-
-    apiCall
-      .then(async response => {
-        if (response.ok) {
-          console.log('Product saved successfully')
-          await loadProducts()
-          setDialogOpen(false)
-          setSelectedProduct(null)
-        } else {
-          const errorData = await response.json()
-          console.error('Failed to save product:', errorData)
-          alert('Failed to save product: ' + JSON.stringify(errorData))
-        }
-      })
-      .catch(error => {
-        console.error('Network error:', error)
-        alert('Network error: ' + error.message)
-      })
+    if (selectedProduct) {
+      void updateProduct(selectedProduct._id || selectedProduct.id, data).catch(console.error)
+    } else {
+      const newProduct: Product = {
+        id: Math.random().toString(36).substring(2, 8),
+        name: data.name || "",
+        brand: data.brand || "",
+        category: data.category || "",
+        flavor: data.flavor || "",
+        weight: data.weight || "",
+        weights: data.weights || "",
+        price: data.price || 0,
+        originalPrice: data.originalPrice || 0,
+        discount: data.discount || 0,
+        rating: data.rating || 0,
+        reviews: data.reviews || 0,
+        description: data.description || "",
+        keyBenefits: data.keyBenefits || "",
+        nutritionalInfo: data.nutritionalInfo || "",
+        inStock: data.inStock ?? true,
+        pricingKey: data.pricingKey || "",
+        image: data.image || "",
+        image1: data.image1 || "",
+        image2: data.image2 || "",
+        image3: data.image3 || "",
+      }
+      void addProduct(newProduct).catch(console.error)
+    }
+    setDialogOpen(false)
+    setSelectedProduct(null)
   }
 
   const columns = [
@@ -502,14 +479,8 @@ export function ProductsPage() {
       label: "Product",
       render: (product: Product) => (
         <div className="flex items-center gap-3">
-          {product.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.image} alt={product.name} className="h-10 w-10 rounded-lg object-cover bg-secondary" />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-[10px] text-muted-foreground">
-              No Image
-            </div>
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={product.image} alt={product.name} className="h-10 w-10 rounded-lg object-cover bg-secondary" />
           <div className="flex flex-col">
             <span className="font-medium text-foreground line-clamp-1">{product.name}</span>
             <span className="text-xs text-muted-foreground">{product.brand}</span>
@@ -578,7 +549,7 @@ export function ProductsPage() {
             <Pencil className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); setDeleteId(product._id ?? null); setDeleteOpen(true) }}>
+            onClick={(e) => { e.stopPropagation(); setDeleteId(product._id || product.id); setDeleteOpen(true) }}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -602,7 +573,6 @@ export function ProductsPage() {
       <DataTable
         data={products}
         columns={columns}
-        loading={loading}
         searchKey="name"
         searchPlaceholder="Search products..."
       />
@@ -644,21 +614,7 @@ export function ProductsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
-                if (deleteId) {
-                  try {
-                    const response = await fetch(`/api/admin/products/${deleteId}/`, {
-                      method: 'DELETE',
-                    })
-                    if (response.ok) {
-                      await loadProducts()
-                    }
-                  } catch (error) {
-                    console.error('Failed to delete product:', error)
-                  }
-                }
-                setDeleteOpen(false)
-              }}>
+              onClick={() => { if (deleteId) void deleteProduct(deleteId).catch(console.error); setDeleteOpen(false) }}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

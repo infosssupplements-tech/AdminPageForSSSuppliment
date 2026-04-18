@@ -112,7 +112,7 @@ class LoginView(APIView):
 
             if password_ok:
                 token = generate_token(admin)
-                return Response({
+                response = Response({
                     'success': True,
                     'token': token,
                     'admin': {
@@ -121,6 +121,14 @@ class LoginView(APIView):
                         'name': admin.get('name', 'Admin'),
                     }
                 })
+                response.set_cookie(
+                    'admin_token',
+                    token,
+                    max_age=60 * 60 * 24 * 7,
+                    httponly=True,
+                    samesite='Lax'
+                )
+                return response
 
         # Fallback: check environment variable credentials
         admin_email = "khutiasudip@gmail.com"
@@ -135,7 +143,7 @@ class LoginView(APIView):
             }
             token = generate_token(admin_data)
             # print(f"token: {token}")
-            return Response({
+            response = Response({
                 'success': True,
                 'token': token,
                 'admin': {
@@ -144,6 +152,14 @@ class LoginView(APIView):
                     'name': 'Admin',
                 }
             })
+            response.set_cookie(
+                'admin_token',
+                token,
+                max_age=60 * 60 * 24 * 7,
+                httponly=True,
+                samesite='Lax'
+            )
+            return response
 
         return Response(
             {'success': False, 'error': 'Invalid email or password.'},
@@ -184,10 +200,12 @@ class LogoutView(APIView):
     def post(self, request):
         # For JWT, logout is just client-side token removal
         # But we can return success
-        return Response({
+        response = Response({
             'success': True,
             'message': 'Logged out successfully'
         })
+        response.delete_cookie('admin_token')
+        return response
 
 
 # ─── Dashboard View ──────────────────────────────────────────────────
@@ -677,18 +695,23 @@ class OrderStatusView(APIView):
 
     def patch(self, request, pk):
         new_status = request.data.get('status')
-        valid_statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
+        status_changed_at = request.data.get('status_changed_at')
+        valid_statuses = ['pending', 'confirmed', 'packed_and_ready', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']
         if new_status not in valid_statuses:
             return Response(
                 {'success': False, 'error': f'Invalid status. Must be one of: {valid_statuses}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        update_data = {'status': new_status}
+        if status_changed_at:
+            update_data['status_changed_at'] = status_changed_at
+
         collection = get_orders_collection()
         try:
             result = collection.update_one(
                 {'_id': ObjectId(pk)},
-                {'$set': {'status': new_status}}
+                {'$set': update_data}
             )
         except InvalidId:
             return Response(

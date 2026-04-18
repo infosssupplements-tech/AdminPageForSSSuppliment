@@ -23,7 +23,7 @@ export function LoginForm() {
     setError("")
     setIsLoading(true)
 
-    const success = await login(email, password)
+    const success = await login(email.trim(), password)
     
     if (success) {
       router.push('/admin/dashboard') // Redirect to dashboard

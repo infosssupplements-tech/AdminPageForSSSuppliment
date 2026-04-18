@@ -34,7 +34,83 @@ import { Pencil, Trash2, Eye, MapPin, Package, CreditCard } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
+function normalizeOrderStatus(status: string): Order["status"] {
+  if (status === "paid") return "confirmed"
+  if (
+    status === "confirmed" ||
+    status === "packed_and_ready" ||
+    status === "shipped" ||
+    status === "out_for_delivery" ||
+    status === "delivered" ||
+    status === "cancelled"
+  ) {
+    return status
+  }
+  return "pending"
+}
+
+function formatOrderDateTime(value?: string) {
+  if (!value) return "Not recorded"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Not recorded"
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  })
+}
+
+function toDateTimeLocalValue(value?: string) {
+  const date = value ? new Date(value) : new Date()
+  const safeDate = Number.isNaN(date.getTime()) ? new Date() : date
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+
+  const parts = formatter.formatToParts(safeDate)
+  const map = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  const pad = (part: string) => part.padStart(2, "0")
+
+  return [
+    map.year,
+    "-",
+    pad(map.month || "00"),
+    "-",
+    pad(map.day || "00"),
+    "T",
+    pad(map.hour || "00"),
+    ":",
+    pad(map.minute || "00"),
+  ].join("")
+}
+
+function parseKolkataDateTimeLocalToISOString(value: string) {
+  if (!value) {
+    return new Date().toISOString()
+  }
+
+  try {
+    return new Date(`${value}:00+05:30`).toISOString()
+  } catch {
+    return new Date().toISOString()
+  }
+}
+
 function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) {
+  const normalizedStatus = normalizeOrderStatus(order.status)
+
   return (
     <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
       {/* Order Info */}
@@ -46,9 +122,10 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Order ID", value: `#${order.order_id}` },
-            { label: "Status", value: order.status },
+            { label: "Status", value: normalizedStatus.replaceAll("_", " ") },
             { label: "Payment", value: order.payment_method.toUpperCase() },
             { label: "UTR", value: order.utr_number || "N/A" },
+            { label: "Coupon", value: order.coupon_code || "N/A" },
           ].map(item => (
             <div key={item.label} className="flex flex-col gap-0.5">
               <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -67,6 +144,8 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">₹{order.actual_subtotal}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">₹{order.shipping_fee}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Coupon Code</span><span className="text-foreground">{order.coupon_code || "N/A"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Coupon Discount</span><span className="text-primary">-₹{order.coupon_discount_value || 0}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Coins Used</span><span className="text-foreground">{order.coins_used}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Coin Discount</span><span className="text-primary">-₹{order.coin_discount_value}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Earned Points</span><span className="text-primary">+{order.earned_points}</span></div>
@@ -117,25 +196,88 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
 }
 
 function OrderStatusForm({ order, onSave, onCancel }: { order: Order; onSave: (data: Partial<Order>) => void; onCancel: () => void }) {
-  const [status, setStatus] = useState(order.status)
+  const normalizedStatus = normalizeOrderStatus(order.status)
+  const [status, setStatus] = useState<Order["status"]>(normalizedStatus)
+  const [statusChangedAt, setStatusChangedAt] = useState(
+    toDateTimeLocalValue(order.status_timeline?.[normalizedStatus] || new Date().toISOString()),
+  )
+
+  const timelineEntries = [
+    { label: "Order placed", value: order.created_at },
+    { label: "Confirmed", value: order.status_timeline?.confirmed },
+    { label: "Packed and ready", value: order.status_timeline?.packed_and_ready },
+    { label: "Shipped", value: order.status_timeline?.shipped },
+    { label: "Out for delivery", value: order.status_timeline?.out_for_delivery },
+    { label: "Delivered", value: order.status_timeline?.delivered },
+    { label: "Cancelled", value: order.status_timeline?.cancelled },
+  ].filter((entry, index) => index === 0 || !!entry.value)
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onSave({ status }) }}>
-      <div className="flex flex-col gap-2">
-        <Label className="text-foreground">Order Status</Label>
-        <Select value={status} onValueChange={v => setStatus(v as Order["status"])}>
-          <SelectTrigger className="bg-secondary border-border text-foreground">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-card border-border">
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
+    <form
+      className="flex flex-col gap-5"
+      onSubmit={e => {
+        e.preventDefault()
+        onSave({
+          status,
+          status_changed_at: parseKolkataDateTimeLocalToISOString(statusChangedAt),
+        })
+      }}
+    >
+      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label className="text-foreground">Order Status</Label>
+            <Select
+              value={status}
+              onValueChange={v => {
+                const nextStatus = v as Order["status"]
+                setStatus(nextStatus)
+                setStatusChangedAt(toDateTimeLocalValue(order.status_timeline?.[nextStatus] || new Date().toISOString()))
+              }}
+            >
+              <SelectTrigger className="bg-secondary border-border text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="packed_and_ready">Packed and ready</SelectItem>
+                <SelectItem value="shipped">Shipped</SelectItem>
+                <SelectItem value="out_for_delivery">Out for delivery</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="status-changed-at" className="text-foreground">Status Time</Label>
+            <Input
+              id="status-changed-at"
+              type="datetime-local"
+              value={statusChangedAt}
+              onChange={(e) => setStatusChangedAt(e.target.value)}
+              className="bg-secondary border-border text-foreground"
+            />
+            <p className="text-xs text-muted-foreground">
+              This time will be shown in the customer order timeline.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-secondary/30 p-4">
+          <p className="text-sm font-semibold text-foreground">Timeline updates</p>
+          <div className="mt-3 space-y-3">
+            {timelineEntries.map((entry) => (
+              <div key={entry.label} className="rounded-md border border-border/80 bg-background/70 px-3 py-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{entry.label}</p>
+                <p className="mt-1 text-sm text-foreground">{formatOrderDateTime(entry.value)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="border-border">Cancel</Button>
         <Button type="submit" className="bg-primary text-primary-foreground">Update Status</Button>
@@ -180,6 +322,14 @@ export function OrdersPage() {
       ),
     },
     {
+      key: "coupon_code",
+      label: "Coupon",
+      className: "hidden lg:table-cell",
+      render: (order: Order) => (
+        <span className="text-sm font-medium">{order.coupon_code || "N/A"}</span>
+      ),
+    },
+    {
       key: "cash_paid",
       label: "Amount",
       render: (order: Order) => (
@@ -199,18 +349,24 @@ export function OrdersPage() {
     {
       key: "status",
       label: "Status",
-      render: (order: Order) => (
+      render: (order: Order) => {
+        const normalizedStatus = normalizeOrderStatus(order.status)
+
+        return (
         <span className={cn(
           "rounded-full px-2.5 py-0.5 text-xs font-medium",
-          order.status === "pending" && "bg-warning/20 text-warning",
-          order.status === "confirmed" && "bg-chart-2/20 text-chart-2",
-          order.status === "shipped" && "bg-primary/20 text-primary",
-          order.status === "delivered" && "bg-primary/20 text-primary",
-          order.status === "cancelled" && "bg-destructive/20 text-destructive",
+          normalizedStatus === "pending" && "bg-warning/20 text-warning",
+          normalizedStatus === "confirmed" && "bg-chart-2/20 text-chart-2",
+          normalizedStatus === "packed_and_ready" && "bg-amber-100 text-amber-800",
+          normalizedStatus === "shipped" && "bg-sky-100 text-sky-800",
+          normalizedStatus === "out_for_delivery" && "bg-primary/20 text-primary",
+          normalizedStatus === "delivered" && "bg-primary/20 text-primary",
+          normalizedStatus === "cancelled" && "bg-destructive/20 text-destructive",
         )}>
-          {order.status}
+          {normalizedStatus.replaceAll("_", " ")}
         </span>
-      ),
+        )
+      },
     },
     {
       key: "created_at",
@@ -257,7 +413,7 @@ export function OrdersPage() {
       />
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="bg-card border-border text-foreground max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-3xl">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
@@ -266,7 +422,7 @@ export function OrdersPage() {
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="bg-card border-border text-foreground max-w-sm">
+        <DialogContent className="bg-card border-border text-foreground max-w-2xl">
           <DialogHeader>
             <DialogTitle>Update Order Status</DialogTitle>
           </DialogHeader>

@@ -52,6 +52,8 @@ export interface Order {
   actual_subtotal: number
   shipping_fee: number
   cart_total: number
+  coupon_code?: string
+  coupon_discount_value?: number
   coins_used: number
   coin_discount_value: number
   cash_paid: number
@@ -60,13 +62,16 @@ export interface Order {
   payment_method: "cod" | "online" | "upi"
   utr_number: string | null
   address: OrderAddress
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled"
+  status: "pending" | "confirmed" | "packed_and_ready" | "shipped" | "out_for_delivery" | "delivered" | "cancelled"
+  status_changed_at?: string
+  status_timeline?: Partial<Record<"pending" | "confirmed" | "packed_and_ready" | "shipped" | "out_for_delivery" | "delivered" | "cancelled", string>>
   created_at: string
+  updated_at?: string
 }
 
 export interface Product {
   _id?: string
-  id?: string
+  id: string
   name: string
   brand: string
   category: string

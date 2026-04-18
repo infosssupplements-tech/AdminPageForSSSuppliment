@@ -172,11 +172,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateOrder = useCallback(async (id: string, data: Partial<Order>) => {
-    const isStatusOnly = Object.keys(data).length === 1 && data.status
+    const allowedStatusKeys = new Set(["status", "status_changed_at"])
+    const isStatusOnly =
+      !!data.status &&
+      Object.keys(data).every((key) => allowedStatusKeys.has(key))
+
     const updated = isStatusOnly
       ? await apiRequest<Order>(`orders/${id}/status/`, {
           method: "PATCH",
-          body: JSON.stringify({ status: data.status }),
+          body: JSON.stringify({
+            status: data.status,
+            status_changed_at: data.status_changed_at,
+          }),
         })
       : await apiRequest<Order>(`orders/${id}/`, {
           method: "PUT",
