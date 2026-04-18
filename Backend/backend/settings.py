@@ -74,10 +74,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://192.168.1.102:3000",
-    "https://ss-supplement-website.vercel.app",
-    "https://www.sssupplement.com",
-    "https://ss-supplement-website-wxfa.vercel.app",
-    "https://supliment-project.vercel.app",
+    "https://adminpage-topaz.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -88,10 +85,8 @@ CORS_ALLOW_CREDENTIALS = True
 # ---------------------------------------------------------------------------
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://www.sssupplement.com",
-    "https://ss-supplement-website-wxfa.vercel.app",
-    "https://ss-supplement-website.vercel.app",
-    "https://ss-supplement-website.onrender.com",
+    "https://adminpage-topaz.vercel.app",
+    "https://adminpageforsssuppliment.onrender.com",
 ]
 
 CSRF_COOKIE_SECURE = True
