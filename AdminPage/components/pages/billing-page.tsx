@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Minus, Trash2, Receipt, Download, Printer, History, X } from "lucide-react"
+import { Plus, Minus, Trash2, Receipt, Download, Printer, History, X, Eye } from "lucide-react"
 
 interface AllProduct {
   _id: string
@@ -50,6 +50,7 @@ export function BillingPage() {
   const [bills, setBills] = useState<Bill[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [historySearchTerm, setHistorySearchTerm] = useState('')
   const [billItems, setBillItems] = useState<BillItem[]>([])
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -235,8 +236,6 @@ export function BillingPage() {
   const handleDownloadPDF = () => {
     if (!generatedBill) return
     const billContent = formatBillForPDF(generatedBill)
-    const element = document.createElement('div')
-    element.innerHTML = billContent
     const printWindow = window.open('', '', 'height=600,width=800')
     if (printWindow) {
       printWindow.document.write(billContent)
@@ -256,70 +255,141 @@ export function BillingPage() {
     }
   }
 
-  const formatBillForPDF = (bill: Bill) => {
-    const itemsHTML = bill.items.map(item => `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${item.price}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${item.total}</td>
-      </tr>
-    `).join('')
+  const handleViewInvoice = () => {
+    if (!generatedBill) return
+    const billContent = formatBillForPDF(generatedBill)
+    const viewWindow = window.open('', '_blank')
+    if (viewWindow) {
+      viewWindow.document.write(billContent)
+      viewWindow.document.close()
+    }
+  }
 
+  const formatBillForPDF = (bill: Bill) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Bill</title>
+        <title>Invoice - SS Supplements</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .title { font-size: 24px; font-weight: bold; }
-          .company { font-size: 18px; margin-top: 10px; }
-          .bill-info { margin-bottom: 20px; }
-          .bill-info div { margin: 5px 0; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th { background-color: #f0f0f0; padding: 10px; border: 1px solid #ddd; text-align: left; }
-          tr:nth-child(even) { background-color: #f9f9f9; }
-          .total-row { font-weight: bold; background-color: #e0e0e0; }
-          .footer { margin-top: 30px; text-align: center; }
+          @page { margin: 0; }
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 40px; color: #333; }
+          .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+          .header-left { display: flex; flex-direction: column; }
+          .header-right { text-align: right; }
+          .logo { max-height: 60px; margin-bottom: 10px; object-fit: contain; }
+          .title { font-size: 36px; font-weight: bold; color: #111; margin: 0; letter-spacing: 2px; }
+          .subtitle { font-size: 14px; color: #666; margin-top: 5px; }
+          .invoice-details { text-align: right; }
+          .invoice-details h2 { margin: 0; font-size: 24px; color: #333; }
+          .invoice-details p { margin: 5px 0 0 0; font-size: 14px; color: #555; }
+          
+          .customer-info { margin-bottom: 40px; display: flex; justify-content: space-between; }
+          .customer-info div { width: 48%; }
+          .info-title { font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+          .info-content { font-size: 15px; line-height: 1.5; }
+          
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th { background-color: #f8f9fa; padding: 12px 15px; border-bottom: 2px solid #ddd; text-align: left; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase; }
+          td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+          tr:last-child td { border-bottom: none; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          
+          .totals-box { width: 100%; display: flex; justify-content: flex-end; }
+          .totals-table { width: 300px; border-collapse: collapse; }
+          .totals-table td { padding: 10px 15px; border-bottom: 1px solid #eee; }
+          .totals-table tr:last-child td { border-bottom: 2px solid #333; font-weight: bold; font-size: 18px; color: #111; }
+          
+          .footer { margin-top: 50px; text-align: center; color: #777; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px; }
+          .footer p { margin: 5px 0; }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="title">BILL</div>
-          <div class="company">SS Supplement</div>
-        </div>
-        
-        <div class="bill-info">
-          <div><strong>Bill ID:</strong> ${bill._id.substring(0, 8)}</div>
-          <div><strong>Date:</strong> ${new Date(bill.created_at).toLocaleDateString()}</div>
-          <div><strong>Customer:</strong> ${bill.customer_name}</div>
-          <div><strong>Phone:</strong> ${bill.customer_phone}</div>
-          <div><strong>Address:</strong> ${bill.customer_address}</div>
-        </div>
+        <div class="invoice-box">
+          <div class="header">
+            <div class="header-left">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="${baseUrl}/logo.png" alt="SS Supplements" class="logo" onerror="this.style.display='none'" />
+                <h1 class="title">SS SUPPLEMENTS</h1>
+              </div>
+              <div class="subtitle">Premium Quality Supplements & Sports Nutrition</div>
+            </div>
+            <div class="invoice-details">
+              <h2>INVOICE</h2>
+              <p><strong>Bill No:</strong> #${bill._id.substring(0, 8).toUpperCase()}</p>
+              <p><strong>Date:</strong> ${new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            </div>
+          </div>
+          
+          <div class="customer-info">
+            <div>
+              <div class="info-title">Billed To</div>
+              <div class="info-content">
+                <strong>${bill.customer_name}</strong><br>
+                Phone: ${bill.customer_phone}<br>
+                ${bill.customer_address ? `Address: ${bill.customer_address}` : ''}
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div class="info-title">Authorized By</div>
+              <div class="info-content">
+                <strong>SS Supplements</strong><br>
+                Store Admin
+              </div>
+            </div>
+          </div>
 
         <table>
           <thead>
             <tr>
-              <th>Product</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Total</th>
+              <th width="5%">#</th>
+              <th width="45%">Product Description</th>
+              <th width="15%" class="text-center">Quantity</th>
+              <th width="15%" class="text-right">Unit Price</th>
+              <th width="20%" class="text-right">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${itemsHTML}
-            <tr class="total-row">
-              <td colspan="3" style="text-align: right; padding: 10px;">TOTAL:</td>
-              <td style="text-align: right; padding: 10px;">₹${bill.total_amount}</td>
-            </tr>
+            ${bill.items.map((item, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>
+                  <strong>${item.name}</strong><br>
+                  <span style="font-size: 12px; color: #777; text-transform: capitalize;">${item.product_type}</span>
+                </td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-right">₹${item.price.toFixed(2)}</td>
+                <td class="text-right">₹${item.total.toFixed(2)}</td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
 
-        <div class="footer">
-          <p>Thank you for your business!</p>
-          <p>Powered by SS Supplement Admin</p>
+          <div class="totals-box">
+            <table class="totals-table">
+              <tr>
+                <td>Subtotal</td>
+                <td class="text-right">₹${bill.total_amount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td>Tax (0%)</td>
+                <td class="text-right">₹0.00</td>
+              </tr>
+              <tr>
+                <td>Grand Total</td>
+                <td class="text-right">₹${bill.total_amount.toFixed(2)}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p><strong>Thank you for choosing SS Supplements!</strong></p>
+            <p>For any queries regarding this invoice, please contact our support.</p>
+            <p>&copy; ${new Date().getFullYear()} SS Supplements. All Rights Reserved.</p>
+          </div>
         </div>
       </body>
       </html>
@@ -330,6 +400,56 @@ export function BillingPage() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.distributor?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const getGroupedBills = () => {
+    const groups: { label: string, date: number, bills: Bill[] }[] = []
+    
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    const searchLower = historySearchTerm.toLowerCase()
+
+    const filtered = bills.filter(bill => {
+      if (!searchLower) return true
+      const billDate = new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).toLowerCase()
+      const numericDate = new Date(bill.created_at).toLocaleDateString('en-IN').toLowerCase()
+      
+      return (
+        bill._id.toLowerCase().includes(searchLower) ||
+        bill.customer_name.toLowerCase().includes(searchLower) ||
+        bill.customer_phone.toLowerCase().includes(searchLower) ||
+        billDate.includes(searchLower) ||
+        numericDate.includes(searchLower) ||
+        bill.items.some(item => item.name.toLowerCase().includes(searchLower))
+      )
+    })
+
+    filtered.forEach(bill => {
+      const billDate = new Date(bill.created_at)
+      billDate.setHours(0, 0, 0, 0)
+
+      let label = ''
+      if (billDate.getTime() === today.getTime()) {
+        label = 'Today'
+      } else if (billDate.getTime() === yesterday.getTime()) {
+        label = 'Yesterday'
+      } else {
+        label = billDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      }
+
+      const existingGroup = groups.find(g => g.label === label)
+      if (existingGroup) {
+        existingGroup.bills.push(bill)
+      } else {
+        groups.push({ label, date: billDate.getTime(), bills: [bill] })
+      }
+    })
+
+    return groups.sort((a, b) => b.date - a.date)
+  }
 
   return (
     <div className="flex flex-col gap-6 min-h-screen">
@@ -354,7 +474,16 @@ export function BillingPage() {
       {showBillingHistory ? (
         // Billing History View
         <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">All Bills</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+            <h2 className="text-xl font-semibold text-foreground">All Bills</h2>
+            <div className="w-full sm:w-96">
+              <Input
+                placeholder="Search by ID, Customer, Product, or Date..."
+                value={historySearchTerm}
+                onChange={(e) => setHistorySearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="border rounded-lg overflow-auto">
             <Table>
               <TableHeader>
@@ -369,19 +498,26 @@ export function BillingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bills.length === 0 ? (
+                {getGroupedBills().length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No bills found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  bills.map(bill => (
-                    <TableRow key={bill._id}>
-                      <TableCell className="font-mono text-sm">{bill._id.substring(0, 8)}</TableCell>
+                  getGroupedBills().map(group => (
+                    <React.Fragment key={group.label}>
+                      <TableRow className="bg-secondary/40 hover:bg-secondary/40">
+                        <TableCell colSpan={7} className="font-semibold text-foreground py-2 px-4">
+                          {group.label}
+                        </TableCell>
+                      </TableRow>
+                      {group.bills.map(bill => (
+                        <TableRow key={bill._id}>
+                          <TableCell className="font-mono text-sm">{bill._id.substring(0, 8).toUpperCase()}</TableCell>
                       <TableCell className="font-medium">{bill.customer_name}</TableCell>
                       <TableCell>{bill.customer_phone}</TableCell>
-                      <TableCell>{new Date(bill.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</TableCell>
                       <TableCell className="font-semibold">₹{bill.total_amount.toLocaleString()}</TableCell>
                       <TableCell>{bill.items.length}</TableCell>
                       <TableCell>
@@ -390,12 +526,15 @@ export function BillingPage() {
                           variant="ghost"
                           onClick={() => {
                             setGeneratedBill(bill)
+                            setShowBillingHistory(false)
                           }}
                         >
                           View
                         </Button>
                       </TableCell>
                     </TableRow>
+                      ))}
+                    </React.Fragment>
                   ))
                 )}
               </TableBody>
@@ -537,37 +676,54 @@ export function BillingPage() {
 
               {generatedBill ? (
                 // Display Generated Bill
-                <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                    <p className="text-green-700 font-semibold">✓ Bill Generated</p>
-                    <p className="text-sm text-green-600">ID: {generatedBill._id.substring(0, 8)}</p>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{generatedBill.customer_name}</span></div>
-                    <div><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{generatedBill.customer_phone}</span></div>
-                    <div><span className="text-muted-foreground">Items:</span> <span className="font-medium">{generatedBill.items.length}</span></div>
-                  </div>
-
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">Subtotal:</span>
-                      <span>₹{generatedBill.total_amount.toLocaleString()}</span>
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5">
+                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                      <Receipt className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total:</span>
-                      <span className="text-primary">₹{generatedBill.total_amount.toLocaleString()}</span>
+                    <h3 className="text-lg font-bold text-foreground">SS SUPPLEMENTS</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Invoice Generated Successfully</p>
+                    <div className="bg-background px-4 py-2 rounded-lg border shadow-sm w-full text-center">
+                      <span className="text-xs text-muted-foreground block mb-1">Invoice Number</span>
+                      <span className="font-mono font-bold text-lg">#{generatedBill._id.substring(0, 8).toUpperCase()}</span>
                     </div>
                   </div>
 
-                  <div className="border-t pt-3 space-y-2">
-                    <Button className="w-full" onClick={handlePrintBill}>
-                      <Printer className="h-4 w-4 mr-2" />
-                      Print Bill
+                  <div className="space-y-4 text-sm bg-card border rounded-xl p-4">
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="font-medium">{new Date(generatedBill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-muted-foreground">Customer Name</span>
+                      <span className="font-medium">{generatedBill.customer_name}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-muted-foreground">Phone Number</span>
+                      <span className="font-medium">{generatedBill.customer_phone}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-muted-foreground">Total Items</span>
+                      <span className="font-medium">{generatedBill.items.length} items</span>
+                    </div>
+                    <div className="flex justify-between pt-1">
+                      <span className="text-muted-foreground font-medium">Grand Total</span>
+                      <span className="text-xl font-bold text-primary">₹{generatedBill.total_amount.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2">
+                    <Button variant="outline" className="w-full bg-secondary/50 hover:bg-secondary px-2 text-xs" onClick={handleViewInvoice}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View PDF
                     </Button>
-                    <Button className="w-full" variant="outline" onClick={handleDownloadPDF}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download PDF
+                    <Button variant="outline" className="w-full bg-secondary/50 hover:bg-secondary px-2 text-xs" onClick={handleDownloadPDF}>
+                      <Download className="h-4 w-4 mr-1" />
+                      Save PDF
+                    </Button>
+                    <Button className="w-full px-2 text-xs" onClick={handlePrintBill}>
+                      <Printer className="h-4 w-4 mr-1" />
+                      Print
                     </Button>
                   </div>
                 </div>
