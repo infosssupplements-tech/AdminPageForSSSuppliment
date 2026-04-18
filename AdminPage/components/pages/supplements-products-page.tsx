@@ -37,6 +37,7 @@ interface SupplementProduct {
   exp_date: string
   pcs: number
   price: number
+  weight: number
   unit: string
   total: number
 }
@@ -58,7 +59,7 @@ export function SupplementsProductsPage() {
       const response = await fetch('/api/admin/inventory/supplements/')
       if (response.ok) {
         const data = await response.json()
-        const productsWithUnits = (data.data || []).map((p: any) => ({ ...p, unit: p.unit || 'pcs' }))
+        const productsWithUnits = (data.data || []).map((p: any) => ({ ...p, unit: p.unit || 'pcs', weight: p.weight || 0 }))
         const activeProducts = productsWithUnits.filter((p: SupplementProduct) => p.pcs > 0)
         setProducts(activeProducts)
         setTotalValue(activeProducts.reduce((acc: number, curr: SupplementProduct) => acc + (curr.pcs * curr.price), 0))
@@ -130,7 +131,7 @@ export function SupplementsProductsPage() {
     {
       key: "pcs",
       label: "QUANTITY",
-      render: (product: SupplementProduct) => `${product.pcs} ${product.unit}`,
+      render: (product: SupplementProduct) => product.weight && product.weight > 0 ? `${product.pcs} (${product.weight}${product.unit})` : `${product.pcs} ${product.unit}`,
     },
     {
       key: "price",
@@ -242,6 +243,7 @@ function SupplementForm({ product, onSave, onCancel }: {
     mfg_date: product?.mfg_date || '',
     exp_date: product?.exp_date || '',
     pcs: product?.pcs || 0,
+    weight: product?.weight || 0,
     price: product?.price || 0,
     unit: product?.unit || 'pcs',
   })
@@ -312,7 +314,7 @@ function SupplementForm({ product, onSave, onCancel }: {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <div className="flex flex-col gap-2">
           <Label className="text-foreground">Quantity</Label>
           <Input
@@ -320,6 +322,18 @@ function SupplementForm({ product, onSave, onCancel }: {
             min="0"
             value={formData.pcs}
             onChange={e => update('pcs', parseInt(e.target.value) || 0)}
+            className="bg-secondary border-border text-foreground"
+            required
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="text-foreground">Unit Value</Label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.weight}
+            onChange={e => update('weight', parseFloat(e.target.value) || 0)}
             className="bg-secondary border-border text-foreground"
             required
           />
