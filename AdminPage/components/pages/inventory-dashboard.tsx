@@ -42,6 +42,7 @@ interface InventoryProduct {
   _id: string
   batch_code?: string
   name: string
+  flavor?: string
   distributor: string
   mfg_date?: string
   exp_date?: string
@@ -95,6 +96,7 @@ export function InventoryDashboard() {
     {
       key: "name",
       label: "NAME",
+      render: (product: InventoryProduct) => product.flavor ? `${product.name} (${product.flavor})` : product.name,
     },
     {
       key: "distributor",

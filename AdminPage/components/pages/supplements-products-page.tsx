@@ -32,6 +32,7 @@ interface SupplementProduct {
   _id: string
   batch_code: string
   name: string
+  flavor?: string
   distributor: string
   mfg_date: string
   exp_date: string
@@ -115,6 +116,7 @@ export function SupplementsProductsPage() {
     {
       key: "name",
       label: "NAME",
+      render: (product: SupplementProduct) => product.flavor ? `${product.name} (${product.flavor})` : product.name,
     },
     {
       key: "distributor",
@@ -239,6 +241,7 @@ function SupplementForm({ product, onSave, onCancel }: {
   const [formData, setFormData] = useState({
     batch_code: product?.batch_code || '',
     name: product?.name || '',
+    flavor: product?.flavor || '',
     distributor: product?.distributor || '',
     mfg_date: product?.mfg_date || '',
     exp_date: product?.exp_date || '',
@@ -281,14 +284,24 @@ function SupplementForm({ product, onSave, onCancel }: {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-foreground">Distributor</Label>
-        <Input
-          value={formData.distributor}
-          onChange={e => update('distributor', e.target.value)}
-          className="bg-secondary border-border text-foreground"
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <Label className="text-foreground">Distributor</Label>
+          <Input
+            value={formData.distributor}
+            onChange={e => update('distributor', e.target.value)}
+            className="bg-secondary border-border text-foreground"
+            required
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="text-foreground">Flavor</Label>
+          <Input
+            value={formData.flavor}
+            onChange={e => update('flavor', e.target.value)}
+            className="bg-secondary border-border text-foreground"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -24,6 +24,7 @@ interface AllProduct {
   batch_code?: string
   size?: string
   distributor?: string
+  flavor?: string
 }
 
 interface BillItem {
@@ -86,6 +87,7 @@ export function BillingPage() {
           type: 'supplement' as const,
           batch_code: p.batch_code,
           distributor: p.distributor,
+          flavor: p.flavor,
         }))
         combinedProducts.push(...supplements)
       }
@@ -136,7 +138,7 @@ export function BillingPage() {
       const newItem: BillItem = {
         product_id: product._id,
         product_type: product.type,
-        name: product.name,
+        name: product.flavor ? `${product.name} (${product.flavor})` : product.name,
         quantity: 1,
         price: product.price,
         total: product.price,
@@ -623,6 +625,7 @@ export function BillingPage() {
                                 {product.batch_code && `Batch: ${product.batch_code}`}
                                 {product.batch_code && ' • '}
                                 Distributor: {product.distributor}
+                              {product.flavor && ` • Flavor: ${product.flavor}`}
                               </>
                             ) : (
                               <>

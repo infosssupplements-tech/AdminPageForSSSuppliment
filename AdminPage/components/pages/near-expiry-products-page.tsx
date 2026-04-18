@@ -10,6 +10,7 @@ interface SupplementProduct {
   _id: string
   batch_code: string
   name: string
+  flavor?: string
   distributor: string
   mfg_date: string
   exp_date: string
@@ -58,6 +59,7 @@ export function NearExpiryProductsPage() {
     {
       key: "name",
       label: "NAME",
+      render: (product: SupplementProduct) => product.flavor ? `${product.name} (${product.flavor})` : product.name,
     },
     {
       key: "distributor",
