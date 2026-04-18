@@ -1,14 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.authentication import BaseAuthentication
-from mongo.collections import users_col, user_addresses_col
+from mongo.collections import users_col
 import jwt
 from django.conf import settings
-from datetime import datetime
-from utils.password import verify_password, hash_password
 from bson import ObjectId
-import traceback
 
 
 class CustomJWTAuthentication(BaseAuthentication):

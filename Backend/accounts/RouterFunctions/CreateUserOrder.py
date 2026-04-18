@@ -81,15 +81,9 @@ def calculate_order_quote(items, user_points, use_coins=False):
     }
 
 
-def get_user_id_from_auth(auth_header):
-    token = auth_header.split(" ")[1]
-    payload = decode_token(token)
-    return payload["user_id"]
-
-
-def CreateOrderUser(auth_header, data, users_collection, orders_collection):
+def CreateOrderUser(user_id, data, users_collection, orders_collection):
     try:
-        user_id = get_user_id_from_auth(auth_header)
+        # user_id is now passed directly
 
         user = users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:

@@ -3,16 +3,8 @@ from utils.jwt_helper import decode_token
 from bson import ObjectId
 
 
-def ProfiView(request, users_collection) :
+def ProfiView(user_id, users_collection) :
     try:
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'error': 'Token required'}, status=401)
-        
-        token = auth_header.split(' ')[1]
-        payload = decode_token(token)
-        user_id = payload['user_id']
-        
         user = users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:
             return Response({'error': 'User not found'}, status=404)

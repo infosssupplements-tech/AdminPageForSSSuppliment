@@ -26,8 +26,8 @@ def generate_token(admin: dict) -> str:
         "email": admin.get("email", ""),
         "name": admin.get("name", "Admin"),
         "type": "admin_access",
-        "iat": now,
-        "exp": now + timedelta(hours=24),
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(hours=24)).timestamp()),
     }
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 

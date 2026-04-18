@@ -70,7 +70,7 @@ export function LoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@sssupplement.com"
+                  placeholder="khutiasudip@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
@@ -124,7 +124,7 @@ export function LoginForm() {
             </Button>
 
             <p className="text-center text-xs text-muted-foreground mt-2">
-              Default: admin@sssupplement.com / admin123
+              Default: khutiasudip@gmail.com / 9547899170
             </p>
           </form>
         </CardContent>

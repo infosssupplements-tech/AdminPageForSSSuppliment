@@ -33,8 +33,6 @@ type ApiResponse<T> = {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = localStorage.getItem("admin_token")
-
   let additionalHeaders: Record<string, string> = {};
   if (init?.headers) {
     if (init.headers instanceof Headers) {
@@ -49,13 +47,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     ...additionalHeaders,
   }
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`
-  }
-
   const res = await fetch(`/api/admin/${path}`, {
     ...init,
     cache: "no-store",
+    credentials: "include",
     headers,
   })
 

@@ -26,7 +26,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
 ]
-DATABASES = {}
 # ---------------------------------------------------------------------------
 # Applications
 # ---------------------------------------------------------------------------
@@ -75,7 +74,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://192.168.1.102:3000",
-    "https://adminpage-topaz.vercel.app",
+    "https://ss-supplement-website.vercel.app",
+    "https://www.sssupplement.com",
+    "https://ss-supplement-website-wxfa.vercel.app",
+    "https://supliment-project.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -86,11 +88,10 @@ CORS_ALLOW_CREDENTIALS = True
 # ---------------------------------------------------------------------------
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://192.168.1.102:3000",
-    "https://adminpage-topaz.vercel.app",
-    "https://adminpageforsssuppliment.onrender.com",
+    "https://www.sssupplement.com",
+    "https://ss-supplement-website-wxfa.vercel.app",
+    "https://ss-supplement-website.vercel.app",
+    "https://ss-supplement-website.onrender.com",
 ]
 
 CSRF_COOKIE_SECURE = True
@@ -122,14 +123,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # ---------------------------------------------------------------------------
-# Database
+# Database - Using MongoDB only, no Django ORM database needed
 # ---------------------------------------------------------------------------
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    # No Django database configuration needed - using MongoDB only
 }
 
 # --------------------------------------------------------------------------- 
@@ -153,7 +151,7 @@ CACHES = {
 AUTH_USER_MODEL = "accounts.User"
 
 AUTHENTICATION_BACKENDS = [
-    "accounts.backends.PhoneBackend",
+    # "accounts.backends.PhoneBackend", # Not used, as custom JWT auth and MongoDB are primary
 ]
 
 # ---------------------------------------------------------------------------
@@ -161,16 +159,8 @@ AUTHENTICATION_BACKENDS = [
 # ---------------------------------------------------------------------------
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.AllowAny",
-    ),
-}
-REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  
+        'utils.CuJWTAuthenticat.CustomJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -221,24 +211,14 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
-}
-
-
-
-
-
 # ==================== EMAIL SETTINGS ====================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'sssuppliment2025@gmail.com'        # ← YOUR GMAIL
-EMAIL_HOST_PASSWORD = 'komp phxt crhh ermr'      # ← NOT normal password!
-DEFAULT_FROM_EMAIL = 'sssuppliment2025@gmail.com'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 # Optional - Server emails (error reports)
-SERVER_EMAIL = 'sssuppliment2025@gmail.com'
+SERVER_EMAIL = os.getenv('EMAIL_HOST_USER')

@@ -4,6 +4,8 @@ from django.urls import path
 from . import viewsAdmin
 
 urlpatterns = [
+    path("test/", viewsAdmin.TestView.as_view(), name="test"),
+
     #path("wake-up/", viewsAdmin.wake_up, name="wake_up"),  
 
     # Auth

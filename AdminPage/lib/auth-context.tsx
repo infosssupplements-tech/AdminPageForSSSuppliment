@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const res = await fetch("/api/admin/auth/me/", {
           method: "GET",
+          credentials: "include",
           cache: "no-store",
         })
 
@@ -45,16 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!res.ok) return false
 
-      const data = await res.json()
-      const token =
-        (typeof data.token === "string" && data.token) ||
-        (typeof data.access === "string" && data.access) ||
-        (typeof data.access_token === "string" && data.access_token) ||
-        ""
-
-      if (!token) return false
-
-      localStorage.setItem("admin_token", token)
+      // Token is set as httpOnly cookie by the API route
       setIsAuthenticated(true)
       return true
     } catch {
@@ -63,7 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
-    localStorage.removeItem("admin_token")
+    try {
+      await fetch("/api/admin/auth/logout/", {
+        method: "POST",
+        credentials: "include",
+      })
+    } catch {
+      // Ignore logout errors
+    }
     setIsAuthenticated(false)
   }
 

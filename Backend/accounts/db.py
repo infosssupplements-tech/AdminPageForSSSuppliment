@@ -3,41 +3,59 @@
 from pymongo import MongoClient
 from django.conf import settings
 
-_client = MongoClient(settings.MONGO_URI)
-_db = _client[settings.MONGO_DB_NAME]
+_client = None
+_db = None
+
+
+def get_client():
+    global _client
+    if _client is None:
+        _client = MongoClient(
+            settings.MONGO_URI,
+            connect=False,
+            serverSelectionTimeoutMS=5000,
+        )
+    return _client
+
+
+def get_db():
+    global _db
+    if _db is None:
+        _db = get_client()[settings.MONGO_DB_NAME]
+    return _db
 
 
 def get_users_collection():
-    return _db["users"]
+    return get_db()["users"]
 
 
 def get_referrals_collection():
-    return _db["referrals"]
+    return get_db()["referrals"]
 
 
 def get_orders_collection():
-    return _db["orders"]
+    return get_db()["orders"]
 
 
 def get_products_collection():
-    return _db["products"]
+    return get_db()["products"]
 
 
 def get_admins_collection():
-    return _db["admins"]
+    return get_db()["admins"]
 
 
 def get_supplement_inventory_collection():
-    return _db["supplement_inventory"]
+    return get_db()["supplement_inventory"]
 
 
 def get_sports_inventory_collection():
-    return _db["sports_inventory"]
+    return get_db()["sports_inventory"]
 
 
 def get_bills_collection():
-    return _db["bills"]
+    return get_db()["bills"]
 
 
 def get_bill_items_collection():
-    return _db["bill_items"]
+    return get_db()["bill_items"]

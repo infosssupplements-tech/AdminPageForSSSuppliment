@@ -372,12 +372,14 @@ class ProfileView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        auth = request.headers.get("Authorization")
-        if not auth or not auth.startswith("Bearer "):
-            return Response({"detail": "Unauthorized"}, status=401)
-
         try:
-            user = ProfileForRefferal(auth)
+            if not request.user or 'id' not in request.user:
+                return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            user_id = request.user['id']
+            user = users_col.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return Response({"detail": "User not found"}, status=404)
 
             return Response({
                 "id": str(user["_id"]),
@@ -396,9 +398,14 @@ class ProfileView(APIView):
 # # .............................................. MY REFERRALS .................................................. 
 class MyReferralsView(APIView):
     def get(self, request):
+        # With default authentication set to CustomJWTAuthentication,
+        # request.user will be populated with user data if the token is valid.
         try:
-            auth = request.headers.get("Authorization")
-            referrals = get_my_referrals(auth)  
+            if not request.user or 'id' not in request.user:
+                return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            user_id = request.user['id']
+            referrals = get_my_referrals(user_id)
             return Response(referrals, status=status.HTTP_200_OK)
             
         except Exception as e:
@@ -434,13 +441,12 @@ from rest_framework.response import Response
 @api_view(['POST'])
 def order_quote(request):
     try:
-        auth_header = request.headers.get('Authorization')
         data = request.data
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'error': 'Token required'}, status=401)
+        if not request.user or 'id' not in request.user:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user_id = get_user_id_from_auth(auth_header)
+        user_id = request.user['id']
         user = users_col.find_one({"_id": ObjectId(user_id)})
         if not user:
             return Response({'error': 'User not found'}, status=404)
@@ -478,14 +484,13 @@ def order_quote(request):
 @api_view(['POST'])
 def create_order(request):
     try:
-        auth_header = request.headers.get('Authorization')
         data = request.data
         
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'error': 'Token required'}, status=401)
-        
+        if not request.user or 'id' not in request.user:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
         order_id, earned_points, new_points, quote = CreateOrderUser(
-            auth_header, 
+            request.user['id'],
             data, 
             users_col, 
             orders_col
@@ -598,13 +603,12 @@ def razorpay_create_order(request):
 @api_view(['POST'])
 def razorpay_verify_payment(request):
     try:
-        auth_header = request.headers.get('Authorization')
         data = request.data
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'error': 'Token required'}, status=401)
+        if not request.user or 'id' not in request.user:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user_id = get_user_id_from_auth(auth_header)
+        user_id = request.user['id']
         user = users_col.find_one({'_id': ObjectId(user_id)})
         if not user:
             return Response({'error': 'User not found'}, status=404)
@@ -630,7 +634,7 @@ def razorpay_verify_payment(request):
             return Response({'error': 'Invalid Razorpay signature'}, status=400)
 
         order_id, earned_points, new_points, quote = CreateOrderUser(
-            auth_header,
+            user_id,
             {
                 'items': items,
                 'use_coins': use_coins,
@@ -669,7 +673,11 @@ def razorpay_verify_payment(request):
 # ................................................ profile_view .............................................
 @api_view(['GET'])
 def profile_view(request):
-    return ProfiView(request, users_col)
+    if not request.user or 'id' not in request.user:
+        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    user_id = request.user['id']
+    return ProfiView(user_id, users_col)
 
 
 
@@ -701,8 +709,3 @@ def verify_otp(request):
 @permission_classes([AllowAny])
 def reset_password(request):
     return RPassword(request, otps_col, users_col, hash_password)
-
-
-
-
-

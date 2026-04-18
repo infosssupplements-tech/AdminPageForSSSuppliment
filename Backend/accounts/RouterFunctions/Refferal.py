@@ -2,17 +2,10 @@ from mongo.collections import users_col, referrals_col
 from bson import ObjectId
 from utils.jwt_helper import decode_token
 import traceback
-
-def get_my_referrals(auth_header: str):
+ 
+def get_my_referrals(user_id: str):
     """Get user's referrals - SAFE & COMPLETE"""
     try:
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return []
-        
-        token = auth_header.replace("Bearer ", "")
-        payload = decode_token(token)
-        user_id = payload.get("user_id")
-        
         if not user_id:
             return []
  
