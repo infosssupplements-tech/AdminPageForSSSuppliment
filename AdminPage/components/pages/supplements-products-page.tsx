@@ -37,6 +37,7 @@ interface SupplementProduct {
   exp_date: string
   pcs: number
   price: number
+  unit: string
   total: number
 }
 
@@ -57,7 +58,8 @@ export function SupplementsProductsPage() {
       const response = await fetch('/api/admin/inventory/supplements/')
       if (response.ok) {
         const data = await response.json()
-        const activeProducts = (data.data || []).filter((p: SupplementProduct) => p.pcs > 0)
+        const productsWithUnits = (data.data || []).map((p: any) => ({ ...p, unit: p.unit || 'pcs' }))
+        const activeProducts = productsWithUnits.filter((p: SupplementProduct) => p.pcs > 0)
         setProducts(activeProducts)
         setTotalValue(activeProducts.reduce((acc: number, curr: SupplementProduct) => acc + (curr.pcs * curr.price), 0))
       }
@@ -127,7 +129,8 @@ export function SupplementsProductsPage() {
     },
     {
       key: "pcs",
-      label: "PCS",
+      label: "QUANTITY",
+      render: (product: SupplementProduct) => `${product.pcs} ${product.unit}`,
     },
     {
       key: "price",
@@ -240,6 +243,7 @@ function SupplementForm({ product, onSave, onCancel }: {
     exp_date: product?.exp_date || '',
     pcs: product?.pcs || 0,
     price: product?.price || 0,
+    unit: product?.unit || 'pcs',
   })
 
   const update = (key: string, value: any) => {
@@ -308,9 +312,9 @@ function SupplementForm({ product, onSave, onCancel }: {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="flex flex-col gap-2">
-          <Label className="text-foreground">PCS</Label>
+          <Label className="text-foreground">Quantity</Label>
           <Input
             type="number"
             min="0"
@@ -319,6 +323,20 @@ function SupplementForm({ product, onSave, onCancel }: {
             className="bg-secondary border-border text-foreground"
             required
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="text-foreground">Unit</Label>
+          <Select value={formData.unit} onValueChange={v => update('unit', v)}>
+            <SelectTrigger className="bg-secondary border-border text-foreground">
+              <SelectValue placeholder="Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pcs">pcs</SelectItem>
+              <SelectItem value="kg">kg</SelectItem>
+              <SelectItem value="g">g</SelectItem>
+              <SelectItem value="n">n</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-2">
           <Label className="text-foreground">Price</Label>
