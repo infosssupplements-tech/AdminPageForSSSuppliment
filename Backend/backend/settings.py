@@ -23,6 +23,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = [
     "ss-supplement-website.onrender.com",
+    "adminpageforsssuppliment.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
