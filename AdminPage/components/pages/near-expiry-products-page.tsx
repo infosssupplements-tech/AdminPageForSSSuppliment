@@ -105,7 +105,7 @@ export function NearExpiryProductsPage() {
             All products sorted by expiry date. Products expiring within 5 months are highlighted.
           </p>
         </div>
-        <Button onClick={() => router.back()} variant="outline">
+        <Button onClick={() => window.dispatchEvent(new CustomEvent('navigatePage', { detail: 'inventory-dashboard' }))} variant="outline">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>

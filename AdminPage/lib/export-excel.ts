@@ -138,3 +138,39 @@ ${buildSheet("Products", flattenProducts(data.products))}
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+export function exportOutOfStockToExcel(products: any[]): void {
+  const flattened = products.map((p) => ({
+    "Product ID": p._id || "",
+    "Type": p.type || "",
+    "Name": p.name || "",
+    "Flavor/Size": p.flavor || p.size || "",
+    "Distributor": p.distributor || "",
+    "Batch Code": p.batch_code || "",
+    "Price": p.price || 0,
+    "Stock": p.pcs || 0,
+  }))
+
+  const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+${buildSheet("Out of Stock", flattened)}
+</Workbook>`
+
+  const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8;" })
+  const now = new Date()
+  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`
+  const filename = `out-of-stock-${timestamp}.xls`
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}

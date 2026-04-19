@@ -30,8 +30,10 @@ import { InventoryDashboard } from "@/components/pages/inventory-dashboard"
 import { SupplementsProductsPage } from "@/components/pages/supplements-products-page"
 import { SportsProductsPage } from "@/components/pages/sports-products-page"
 import { BillingPage } from "@/components/pages/billing-page"
+import { OutOfStockProductsPage } from "@/components/pages/out-of-stock-products-page"
+import { NearExpiryProductsPage } from "@/components/pages/near-expiry-products-page"
 
-type Page = "dashboard" | "users" | "referrals" | "orders" | "web-products" | "inventory-dashboard" | "supplements-products" | "sports-products" | "billing"
+type Page = "dashboard" | "users" | "referrals" | "orders" | "web-products" | "inventory-dashboard" | "supplements-products" | "sports-products" | "billing" | "out-of-stock" | "near-expiry"
 
 const navSections = [
   {
@@ -164,6 +166,14 @@ export function AdminDashboard() {
     if (savedPage) {
       setActivePage(savedPage)
     }
+
+    const handleNavigate = (e: CustomEvent) => {
+      const page = e.detail as Page
+      setActivePage(page)
+      localStorage.setItem("adminActivePage", page)
+    }
+    window.addEventListener("navigatePage", handleNavigate as EventListener)
+    return () => window.removeEventListener("navigatePage", handleNavigate as EventListener)
   }, [])
 
   const renderPage = () => {
@@ -177,6 +187,8 @@ export function AdminDashboard() {
       case "supplements-products": return <SupplementsProductsPage />
       case "sports-products": return <SportsProductsPage />
       case "billing": return <BillingPage />
+      case "out-of-stock": return <OutOfStockProductsPage />
+      case "near-expiry": return <NearExpiryProductsPage />
       default: return <DashboardOverview />
     }
   }
@@ -191,6 +203,8 @@ export function AdminDashboard() {
     "supplements-products": "Supplements Products",
     "sports-products": "Sports Products",
     billing: "Billing",
+    "out-of-stock": "Out of Stock Products",
+    "near-expiry": "Near Expiry Products",
   }
 
   return (

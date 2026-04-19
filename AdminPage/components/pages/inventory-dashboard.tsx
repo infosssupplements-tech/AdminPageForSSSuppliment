@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Plus, Pencil, Trash2, Eye, Star, Package, DollarSign, AlertTriangle, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { exportOutOfStockToExcel } from "@/lib/export-excel"
 
 interface InventoryStats {
   total_products: number
@@ -50,6 +51,7 @@ interface InventoryProduct {
   price: number
   total: number
   size?: string
+  type?: string
 }
 
 export function InventoryDashboard() {
@@ -57,6 +59,7 @@ export function InventoryDashboard() {
   const [supplements, setSupplements] = useState<InventoryProduct[]>([])
   const [sports, setSports] = useState<InventoryProduct[]>([])
   const [loading, setLoading] = useState(true)
+  const [outOfStock, setOutOfStock] = useState<InventoryProduct[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -78,8 +81,17 @@ export function InventoryDashboard() {
 
       if (productsRes.ok) {
         const productsData = await productsRes.json()
-        setSupplements((productsData.data.supplements || []).filter((p: InventoryProduct) => p.pcs > 0))
-        setSports((productsData.data.sports || []).filter((p: InventoryProduct) => p.pcs > 0))
+        const allSupplements = productsData.data.supplements || []
+        const allSports = productsData.data.sports || []
+
+        setSupplements(allSupplements.filter((p: InventoryProduct) => p.pcs > 0))
+        setSports(allSports.filter((p: InventoryProduct) => p.pcs > 0))
+        
+        const oos = [
+          ...allSupplements.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Supplement' })),
+          ...allSports.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Sports' }))
+        ]
+        setOutOfStock(oos)
       }
     } catch (error) {
       console.error('Failed to load inventory data:', error)
@@ -171,7 +183,7 @@ export function InventoryDashboard() {
       </div>
 
       {/* Dashboard Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Button
           variant="outline"
           className="h-24 flex flex-col items-center justify-center gap-2"
@@ -198,7 +210,7 @@ export function InventoryDashboard() {
         <Button
           variant="outline"
           className="h-24 flex flex-col items-center justify-center gap-2"
-          onClick={() => router.push('/admin/dashboard/near-expiry')}
+          onClick={() => window.dispatchEvent(new CustomEvent('navigatePage', { detail: 'near-expiry' }))}
         >
           <AlertTriangle className="h-8 w-8" />
           <span className="text-sm font-medium">NEAR EXP PRODUCTS</span>
@@ -212,6 +224,16 @@ export function InventoryDashboard() {
           <FileText className="h-8 w-8" />
           <span className="text-sm font-medium">BILLING HISTORY</span>
           <span className="text-lg font-bold">{stats?.total_bills || 0}</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center gap-2 border-destructive/50 hover:bg-destructive/10"
+          onClick={() => window.dispatchEvent(new CustomEvent('navigatePage', { detail: 'out-of-stock' }))}
+        >
+          <Package className="h-8 w-8 text-destructive" />
+          <span className="text-sm font-medium text-destructive text-center leading-tight">OUT OF STOCK</span>
+          <span className="text-lg font-bold text-destructive">{outOfStock.length}</span>
         </Button>
       </div>
 
