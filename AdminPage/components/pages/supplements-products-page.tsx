@@ -213,7 +213,10 @@ export function SupplementsProductsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent 
+          className="max-w-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>
               {selectedProduct ? 'Edit Supplement Product' : 'Add Supplement Product'}

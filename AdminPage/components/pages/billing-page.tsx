@@ -33,6 +33,7 @@ interface BillItem {
   name: string
   quantity: number
   price: number
+  discount_percent: number
   total: number
 }
 
@@ -131,7 +132,7 @@ export function BillingPage() {
       }
       setBillItems(prev => prev.map(item =>
         item.product_id === product._id && item.product_type === product.type
-          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price }
+          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price * (1 - (item.discount_percent || 0) / 100) }
           : item
       ))
     } else {
@@ -141,6 +142,7 @@ export function BillingPage() {
         name: product.flavor ? `${product.name} (${product.flavor})` : product.name,
         quantity: 1,
         price: product.price,
+        discount_percent: 0,
         total: product.price,
       }
       setBillItems(prev => [...prev, newItem])
@@ -165,7 +167,18 @@ export function BillingPage() {
 
     setBillItems(prev => prev.map(item =>
       item.product_id === productId && item.product_type === productType
-        ? { ...item, quantity, total: quantity * item.price }
+        ? { ...item, quantity, total: quantity * item.price * (1 - (item.discount_percent || 0) / 100) }
+        : item
+    ))
+  }
+
+  const updateDiscount = (productId: string, productType: 'supplement' | 'sports', discount_percent: number) => {
+    if (discount_percent < 0) discount_percent = 0;
+    if (discount_percent > 100) discount_percent = 100;
+    
+    setBillItems(prev => prev.map(item =>
+      item.product_id === productId && item.product_type === productType
+        ? { ...item, discount_percent, total: item.quantity * item.price * (1 - discount_percent / 100) }
         : item
     ))
   }
@@ -348,9 +361,10 @@ export function BillingPage() {
           <thead>
             <tr>
               <th width="5%">#</th>
-              <th width="45%">Product Description</th>
-              <th width="15%" class="text-center">Quantity</th>
+              <th width="40%">Product Description</th>
+              <th width="10%" class="text-center">Qty</th>
               <th width="15%" class="text-right">Unit Price</th>
+              <th width="10%" class="text-right">Disc %</th>
               <th width="20%" class="text-right">Total</th>
             </tr>
           </thead>
@@ -364,6 +378,7 @@ export function BillingPage() {
                 </td>
                 <td class="text-center">${item.quantity}</td>
                 <td class="text-right">₹${item.price.toFixed(2)}</td>
+                <td class="text-right">${item.discount_percent ? item.discount_percent + '%' : '-'}</td>
                 <td class="text-right">₹${item.total.toFixed(2)}</td>
               </tr>
             `).join('')}
@@ -374,8 +389,14 @@ export function BillingPage() {
             <table class="totals-table">
               <tr>
                 <td>Subtotal</td>
-                <td class="text-right">₹${bill.total_amount.toFixed(2)}</td>
+                <td class="text-right">₹${bill.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</td>
               </tr>
+              ${bill.items.some(i => (i.discount_percent || 0) > 0) ? `
+              <tr>
+                <td>Total Discount</td>
+                <td class="text-right">-₹${bill.items.reduce((sum, item) => sum + (item.price * item.quantity - item.total), 0).toFixed(2)}</td>
+              </tr>
+              ` : ''}
               <tr>
                 <td>Tax (0%)</td>
                 <td class="text-right">₹0.00</td>
@@ -743,15 +764,19 @@ export function BillingPage() {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="text-xs">Product</TableHead>
-                            <TableHead className="text-xs w-12">Qty</TableHead>
-                            <TableHead className="text-xs w-16 text-right">Price</TableHead>
+                            <TableHead className="text-xs w-20">Qty</TableHead>
+                            <TableHead className="text-xs w-16">Disc %</TableHead>
+                            <TableHead className="text-xs w-20 text-right">Total</TableHead>
                             <TableHead className="text-xs w-8"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {billItems.map((item) => (
                             <TableRow key={`${item.product_type}-${item.product_id}`}>
-                              <TableCell className="text-xs font-medium py-2">{item.name}</TableCell>
+                              <TableCell className="text-xs font-medium py-2">
+                                {item.name}
+                                <div className="text-[10px] text-muted-foreground mt-0.5">₹{item.price}/pc</div>
+                              </TableCell>
                               <TableCell className="text-xs py-2">
                                 <div className="flex items-center gap-1">
                                   <Button
@@ -773,7 +798,18 @@ export function BillingPage() {
                                   </Button>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-xs py-2 text-right">₹{item.total}</TableCell>
+                              <TableCell className="text-xs py-2">
+                                <Input 
+                                  type="number" 
+                                  min="0"
+                                  max="100"
+                                  className="h-6 px-1 py-0 text-xs w-14" 
+                                  value={item.discount_percent === 0 ? "" : item.discount_percent} 
+                                  placeholder="0"
+                                  onChange={(e) => updateDiscount(item.product_id, item.product_type, parseFloat(e.target.value) || 0)} 
+                                />
+                              </TableCell>
+                              <TableCell className="text-xs py-2 text-right">₹{item.total.toFixed(2)}</TableCell>
                               <TableCell className="py-2">
                                 <Button
                                   variant="ghost"

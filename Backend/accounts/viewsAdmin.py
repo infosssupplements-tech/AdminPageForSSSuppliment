@@ -1304,6 +1304,7 @@ class BillListCreateView(APIView):
             product_type = item.get('product_type')
             product_id = item.get('product_id')
             quantity = item.get('quantity', 0)
+            discount_percent = float(item.get('discount_percent', 0))
 
             if product_type == 'supplement':
                 product = supplement_col.find_one({'_id': ObjectId(product_id)})
@@ -1318,7 +1319,7 @@ class BillListCreateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 unit_price = product['price']
-                total_price = unit_price * quantity
+                total_price = unit_price * quantity * (1 - discount_percent / 100)
                 total_amount += total_price
 
                 bill_items.append({
@@ -1328,6 +1329,7 @@ class BillListCreateView(APIView):
                     'name': product['name'], # Changed to 'name' for frontend compatibility
                     'quantity': quantity,
                     'price': float(unit_price), # Changed to 'price' for frontend compatibility
+                    'discount_percent': float(discount_percent),
                     'total': float(total_price), # Changed to 'total' for frontend compatibility
                     'pcs_before_sale': product['pcs'], # For inventory reduction later
                     'created_at': datetime.now(timezone.utc),
@@ -1346,7 +1348,7 @@ class BillListCreateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 unit_price = product['price']
-                total_price = unit_price * quantity
+                total_price = unit_price * quantity * (1 - discount_percent / 100)
                 total_amount += total_price
 
                 bill_items.append({
@@ -1356,6 +1358,7 @@ class BillListCreateView(APIView):
                     'name': product['name'], # Changed to 'name' for frontend compatibility
                     'quantity': quantity,
                     'price': float(unit_price), # Changed to 'price' for frontend compatibility
+                    'discount_percent': float(discount_percent),
                     'total': float(total_price), # Changed to 'total' for frontend compatibility
                     'pcs_before_sale': product['pcs'], # For inventory reduction later
                     'created_at': datetime.now(timezone.utc),

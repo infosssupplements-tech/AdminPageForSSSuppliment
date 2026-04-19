@@ -586,7 +586,10 @@ export function ProductsPage() {
           }
         }}
       >
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl">
+        <DialogContent 
+          className="bg-card border-border text-foreground max-w-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>{selectedProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
           </DialogHeader>

@@ -422,7 +422,10 @@ export function OrdersPage() {
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="bg-card border-border text-foreground max-w-2xl">
+        <DialogContent 
+          className="bg-card border-border text-foreground max-w-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Update Order Status</DialogTitle>
           </DialogHeader>
