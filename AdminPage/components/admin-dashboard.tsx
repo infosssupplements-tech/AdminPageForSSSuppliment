@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useData } from "@/lib/data-store"
 import { exportAdminDataToExcel } from "@/lib/export-excel"
@@ -159,6 +159,13 @@ export function AdminDashboard() {
   const [activePage, setActivePage] = useState<Page>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  useEffect(() => {
+    const savedPage = localStorage.getItem("adminActivePage") as Page | null
+    if (savedPage) {
+      setActivePage(savedPage)
+    }
+  }, [])
+
   const renderPage = () => {
     switch (activePage) {
       case "dashboard": return <DashboardOverview />
@@ -232,6 +239,7 @@ export function AdminDashboard() {
                       key={item.id}
                       onClick={() => {
                         setActivePage(item.id)
+                        localStorage.setItem("adminActivePage", item.id)
                         setSidebarOpen(false)
                       }}
                       className={cn(
@@ -257,6 +265,7 @@ export function AdminDashboard() {
         <div className="border-t border-sidebar-border p-3">
           <button
             onClick={async () => {
+              localStorage.removeItem("adminActivePage")
               await logout()
               router.push("/")
               router.refresh()
