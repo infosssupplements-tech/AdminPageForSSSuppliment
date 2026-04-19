@@ -25,6 +25,8 @@ interface AllProduct {
   size?: string
   distributor?: string
   flavor?: string
+  weight?: number
+  unit?: string
 }
 
 interface BillItem {
@@ -89,6 +91,8 @@ export function BillingPage() {
           batch_code: p.batch_code,
           distributor: p.distributor,
           flavor: p.flavor,
+          weight: p.weight || 0,
+          unit: p.unit || 'pcs',
         }))
         combinedProducts.push(...supplements)
       }
@@ -647,6 +651,7 @@ export function BillingPage() {
                                 {product.batch_code && ' • '}
                                 Distributor: {product.distributor}
                               {product.flavor && ` • Flavor: ${product.flavor}`}
+                              {product.weight && product.weight > 0 ? ` • Weight: ${product.weight}${product.unit || ''}` : ''}
                               </>
                             ) : (
                               <>
