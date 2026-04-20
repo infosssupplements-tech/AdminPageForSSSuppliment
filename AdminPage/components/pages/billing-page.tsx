@@ -424,10 +424,16 @@ export function BillingPage() {
     `
   }
 
-  const filteredProducts = allProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.distributor?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProducts = allProducts.filter(product => {
+    const term = searchTerm.toLowerCase();
+    return String(product.name ?? "").toLowerCase().includes(term) ||
+      String(product.distributor ?? "").toLowerCase().includes(term) ||
+      String(product.batch_code ?? "").toLowerCase().includes(term) ||
+      String(product.flavor ?? "").toLowerCase().includes(term) ||
+      String(product.size ?? "").toLowerCase().includes(term) ||
+      String(product.weight ?? "").toLowerCase().includes(term) ||
+      String(product.unit ?? "").toLowerCase().includes(term)
+  })
 
   const getGroupedBills = () => {
     const groups: { label: string, date: number, bills: Bill[] }[] = []
@@ -623,7 +629,7 @@ export function BillingPage() {
               <h2 className="text-xl font-semibold text-foreground mb-4">Select Products</h2>
               <div className="mb-4">
                 <Input
-                  placeholder="Search products by name or distributor..."
+                  placeholder="Search by name, batch code, distributor, flavor, size, weight..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                 />

@@ -13,7 +13,8 @@ interface DataTableProps<T> {
     render?: (item: T) => React.ReactNode
     className?: string
   }[]
-  searchKey?: keyof T
+  searchKey?: keyof T | string
+  searchKeys?: (keyof T | string)[]
   searchPlaceholder?: string
   pageSize?: number
   loading?: boolean
@@ -24,6 +25,7 @@ export function DataTable<T extends object>({
   data,
   columns,
   searchKey,
+  searchKeys,
   searchPlaceholder = "Search...",
   pageSize = 10,
   loading = false,
@@ -32,10 +34,19 @@ export function DataTable<T extends object>({
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(0)
 
-  const filtered = searchKey
+  const filtered = searchKey || searchKeys
     ? data.filter(item => {
-        const val = item[searchKey]
-        return String(val ?? "").toLowerCase().includes(search.toLowerCase())
+        if (searchKeys) {
+          return searchKeys.some(key => {
+            const val = (item as any)[key]
+            return String(val ?? "").toLowerCase().includes(search.toLowerCase())
+          })
+        }
+        if (searchKey) {
+          const val = (item as any)[searchKey]
+          return String(val ?? "").toLowerCase().includes(search.toLowerCase())
+        }
+        return true
       })
     : data
 
@@ -44,7 +55,7 @@ export function DataTable<T extends object>({
 
   return (
     <div className="flex flex-col gap-4">
-      {searchKey && (
+      {(searchKey || searchKeys) && (
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

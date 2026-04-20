@@ -246,8 +246,8 @@ export function InventoryDashboard() {
         <DataTable
           data={supplements}
           columns={supplementColumns}
-          searchKey="name"
-          searchPlaceholder="Search supplements..."
+          searchKeys={["name", "batch_code", "distributor", "flavor"]}
+          searchPlaceholder="Search by name, batch code, distributor, flavor..."
         />
       </div>
 
@@ -257,8 +257,8 @@ export function InventoryDashboard() {
         <DataTable
           data={sports}
           columns={sportsColumns}
-          searchKey="name"
-          searchPlaceholder="Search sports products..."
+          searchKeys={["name", "distributor", "size"]}
+          searchPlaceholder="Search by name, distributor, size..."
         />
       </div>
     </div>

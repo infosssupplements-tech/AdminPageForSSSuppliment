@@ -573,8 +573,8 @@ export function ProductsPage() {
       <DataTable
         data={products}
         columns={columns}
-        searchKey="name"
-        searchPlaceholder="Search products..."
+        searchKeys={["name", "brand", "category", "flavor", "weight"]}
+        searchPlaceholder="Search by name, brand, category, flavor, weight..."
       />
 
       <Dialog

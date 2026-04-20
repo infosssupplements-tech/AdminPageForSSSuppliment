@@ -210,8 +210,8 @@ export function SupplementsProductsPage() {
           data={products}
           columns={columns}
           loading={loading}
-          searchKey="name"
-          searchPlaceholder="Search supplements..."
+          searchKeys={["name", "batch_code", "distributor", "flavor", "weight"]}
+          searchPlaceholder="Search by name, batch code, distributor, flavor, weight..."
         />
       </div>
 

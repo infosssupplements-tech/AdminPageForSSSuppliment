@@ -115,7 +115,7 @@ export function NearExpiryProductsPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card">
-        <DataTable data={products} columns={columns} loading={loading} searchKey="name" searchPlaceholder="Search products..." />
+        <DataTable data={products} columns={columns} loading={loading} searchKeys={["name", "batch_code", "distributor", "flavor"]} searchPlaceholder="Search by name, batch code, distributor, flavor..." />
       </div>
     </div>
   )

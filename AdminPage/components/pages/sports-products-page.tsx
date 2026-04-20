@@ -191,8 +191,8 @@ export function SportsProductsPage() {
           data={products}
           columns={columns}
           loading={loading}
-          searchKey="name"
-          searchPlaceholder="Search sports products..."
+          searchKeys={["name", "distributor", "size"]}
+          searchPlaceholder="Search by name, distributor, size..."
         />
       </div>
 

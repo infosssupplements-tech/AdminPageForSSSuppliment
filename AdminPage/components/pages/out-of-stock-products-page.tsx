@@ -230,8 +230,8 @@ export function OutOfStockProductsPage() {
           data={products} 
           columns={columns} 
           loading={loading} 
-          searchKey="name" 
-          searchPlaceholder="Search out of stock products..." 
+          searchKeys={["name", "batch_code", "distributor", "flavor", "size"]} 
+          searchPlaceholder="Search by name, batch code, distributor..." 
         />
       </div>
 
