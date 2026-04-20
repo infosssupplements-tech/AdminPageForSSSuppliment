@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Plus, Pencil, Trash2, Eye, Star, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 interface SupplementProduct {
   _id: string
@@ -125,10 +126,12 @@ export function SupplementsProductsPage() {
     {
       key: "mfg_date",
       label: "MFG",
+      render: (product: SupplementProduct) => product.mfg_date ? format(new Date(product.mfg_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "exp_date",
       label: "EXP",
+      render: (product: SupplementProduct) => product.exp_date ? format(new Date(product.exp_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "pcs",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import { format } from "date-fns"
 
 interface SupplementProduct {
   _id: string
@@ -68,10 +69,12 @@ export function NearExpiryProductsPage() {
     {
       key: "mfg_date",
       label: "MFG",
+      render: (product: SupplementProduct) => product.mfg_date ? format(new Date(product.mfg_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "exp_date",
       label: "EXP",
+      render: (product: SupplementProduct) => product.exp_date ? format(new Date(product.exp_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "pcs",

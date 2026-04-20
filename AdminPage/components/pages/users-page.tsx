@@ -86,8 +86,8 @@ function UserDetail({ user, onClose }: { user: User; onClose: () => void }) {
         { label: "Phone", value: user.phone },
         { label: "Points", value: user.points.toString() },
         { label: "Referral Code", value: user.referral_code || "None" },
-        { label: "Created At", value: format(new Date(user.created_at), "PPpp") },
-        { label: "Updated At", value: format(new Date(user.updated_at), "PPpp") },
+        { label: "Created At", value: format(new Date(user.created_at), "dd/MM/yyyy, hh:mm a") },
+        { label: "Updated At", value: format(new Date(user.updated_at), "dd/MM/yyyy, hh:mm a") },
       ].map(item => (
         <div key={item.label} className="flex flex-col gap-1">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -164,7 +164,7 @@ export function UsersPage() {
       key: "created_at",
       label: "Joined",
       className: "hidden xl:table-cell",
-      render: (user: User) => format(new Date(user.created_at), "MMM d, yyyy"),
+      render: (user: User) => format(new Date(user.created_at), "dd/MM/yyyy"),
     },
     {
       key: "actions",

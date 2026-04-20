@@ -53,17 +53,7 @@ function formatOrderDateTime(value?: string) {
   if (!value) return "Not recorded"
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return "Not recorded"
-  return date.toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
-  })
+  return format(date, "dd/MM/yyyy, hh:mm a")
 }
 
 function toDateTimeLocalValue(value?: string) {
@@ -372,7 +362,7 @@ export function OrdersPage() {
       key: "created_at",
       label: "Date",
       className: "hidden xl:table-cell",
-      render: (order: Order) => format(new Date(order.created_at), "MMM d, yyyy"),
+      render: (order: Order) => format(new Date(order.created_at), "dd/MM/yyyy"),
     },
     {
       key: "actions",

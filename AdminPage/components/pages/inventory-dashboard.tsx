@@ -29,6 +29,7 @@ import {
 import { Plus, Pencil, Trash2, Eye, Star, Package, DollarSign, AlertTriangle, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { exportOutOfStockToExcel } from "@/lib/export-excel"
+import { format } from "date-fns"
 
 interface InventoryStats {
   total_products: number
@@ -117,10 +118,12 @@ export function InventoryDashboard() {
     {
       key: "mfg_date",
       label: "MFG",
+      render: (product: InventoryProduct) => product.mfg_date ? format(new Date(product.mfg_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "exp_date",
       label: "EXP",
+      render: (product: InventoryProduct) => product.exp_date ? format(new Date(product.exp_date), "dd/MM/yyyy") : "-",
     },
     {
       key: "pcs",

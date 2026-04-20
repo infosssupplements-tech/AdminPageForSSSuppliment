@@ -1,4 +1,5 @@
 import type { Order, Product, Referral, User } from "./types"
+import { format } from "date-fns"
 
 function escapeXml(value: unknown): string {
   return String(value ?? "")
@@ -60,8 +61,8 @@ function flattenUsers(users: User[]): Array<Record<string, unknown>> {
     phone: u.phone,
     points: u.points,
     referral_code: u.referral_code || "",
-    created_at: u.created_at,
-    updated_at: u.updated_at,
+    created_at: u.created_at ? format(new Date(u.created_at), "dd/MM/yyyy") : "",
+    updated_at: u.updated_at ? format(new Date(u.updated_at), "dd/MM/yyyy") : "",
   }))
 }
 
@@ -75,7 +76,7 @@ function flattenReferrals(referrals: Referral[]): Array<Record<string, unknown>>
     referrer_points: r.referrer_points,
     referee_points: r.referee_points,
     status: r.status,
-    created_at: r.created_at,
+    created_at: r.created_at ? format(new Date(r.created_at), "dd/MM/yyyy") : "",
   }))
 }
 
@@ -95,7 +96,7 @@ function flattenOrders(orders: Order[]): Array<Record<string, unknown>> {
     earned_points: o.earned_points,
     items_count: o.order_items.length,
     items_json: JSON.stringify(o.order_items),
-    created_at: o.created_at,
+    created_at: o.created_at ? format(new Date(o.created_at), "dd/MM/yyyy") : "",
   }))
 }
 

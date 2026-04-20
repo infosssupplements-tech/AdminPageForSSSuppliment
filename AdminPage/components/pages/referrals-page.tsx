@@ -124,7 +124,7 @@ function ReferralDetail({ referral, onClose }: { referral: Referral; onClose: ()
         { label: "Referrer Points", value: referral.referrer_points.toString() },
         { label: "Referee Points", value: referral.referee_points.toString() },
         { label: "Status", value: referral.status },
-        { label: "Created At", value: format(new Date(referral.created_at), "PPpp") },
+        { label: "Created At", value: format(new Date(referral.created_at), "dd/MM/yyyy, hh:mm a") },
       ].map(item => (
         <div key={item.label} className="flex flex-col gap-1">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -217,7 +217,7 @@ export function ReferralsPage() {
       key: "created_at",
       label: "Date",
       className: "hidden lg:table-cell",
-      render: (ref: Referral) => format(new Date(ref.created_at), "MMM d, yyyy"),
+      render: (ref: Referral) => format(new Date(ref.created_at), "dd/MM/yyyy"),
     },
     {
       key: "actions",

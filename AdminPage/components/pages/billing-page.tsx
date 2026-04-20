@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Plus, Minus, Trash2, Receipt, Download, Printer, History, X, Eye } from "lucide-react"
+import { format } from "date-fns"
 
 interface AllProduct {
   _id: string
@@ -339,7 +340,7 @@ export function BillingPage() {
             <div class="invoice-details">
               <h2>INVOICE</h2>
               <p><strong>Bill No:</strong> #${bill._id.substring(0, 8).toUpperCase()}</p>
-              <p><strong>Date:</strong> ${new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              <p><strong>Date:</strong> ${format(new Date(bill.created_at), 'dd/MM/yyyy')}</p>
             </div>
           </div>
           
@@ -441,15 +442,13 @@ export function BillingPage() {
 
     const filtered = bills.filter(bill => {
       if (!searchLower) return true
-      const billDate = new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).toLowerCase()
-      const numericDate = new Date(bill.created_at).toLocaleDateString('en-IN').toLowerCase()
+      const formattedDate = format(new Date(bill.created_at), 'dd/MM/yyyy').toLowerCase()
       
       return (
         bill._id.toLowerCase().includes(searchLower) ||
         bill.customer_name.toLowerCase().includes(searchLower) ||
         bill.customer_phone.toLowerCase().includes(searchLower) ||
-        billDate.includes(searchLower) ||
-        numericDate.includes(searchLower) ||
+        formattedDate.includes(searchLower) ||
         bill.items.some(item => item.name.toLowerCase().includes(searchLower))
       )
     })
@@ -464,7 +463,7 @@ export function BillingPage() {
       } else if (billDate.getTime() === yesterday.getTime()) {
         label = 'Yesterday'
       } else {
-        label = billDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        label = format(billDate, 'dd/MM/yyyy')
       }
 
       const existingGroup = groups.find(g => g.label === label)
@@ -544,7 +543,7 @@ export function BillingPage() {
                           <TableCell className="font-mono text-sm">{bill._id.substring(0, 8).toUpperCase()}</TableCell>
                       <TableCell className="font-medium">{bill.customer_name}</TableCell>
                       <TableCell>{bill.customer_phone}</TableCell>
-                          <TableCell>{new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</TableCell>
+                          <TableCell>{format(new Date(bill.created_at), 'dd/MM/yyyy')}</TableCell>
                       <TableCell className="font-semibold">₹{bill.total_amount.toLocaleString()}</TableCell>
                       <TableCell>{bill.items.length}</TableCell>
                       <TableCell>
@@ -721,7 +720,7 @@ export function BillingPage() {
                   <div className="space-y-4 text-sm bg-card border rounded-xl p-4">
                     <div className="flex justify-between border-b pb-3">
                       <span className="text-muted-foreground">Date</span>
-                      <span className="font-medium">{new Date(generatedBill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className="font-medium">{format(new Date(generatedBill.created_at), 'dd/MM/yyyy')}</span>
                     </div>
                     <div className="flex justify-between border-b pb-3">
                       <span className="text-muted-foreground">Customer Name</span>
