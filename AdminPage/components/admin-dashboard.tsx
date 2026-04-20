@@ -22,6 +22,8 @@ import {
   IndianRupee,
   Download,
   PanelLeft,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
 import { UsersPage } from "@/components/pages/users-page"
 import { ReferralsPage } from "@/components/pages/referrals-page"
@@ -35,6 +37,40 @@ import { OutOfStockProductsPage } from "@/components/pages/out-of-stock-products
 import { NearExpiryProductsPage } from "@/components/pages/near-expiry-products-page"
 
 type Page = "dashboard" | "users" | "referrals" | "orders" | "web-products" | "inventory-dashboard" | "supplements-products" | "sports-products" | "billing" | "out-of-stock" | "near-expiry"
+
+// --- Web Audio API Click Sound Helper ---
+let audioCtx: AudioContext | null = null;
+let isSoundEnabledGlobal = true;
+
+const playClickSound = () => {
+  if (!isSoundEnabledGlobal) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sine';
+    // Create a subtle "tick" sound
+    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.05);
+  } catch (e) {
+    // Silently ignore errors (e.g., if browser blocks audio)
+  }
+};
 
 const navSections = [
   {
@@ -162,6 +198,7 @@ export function AdminDashboard() {
   const [activePage, setActivePage] = useState<Page>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
 
   useEffect(() => {
     const savedPage = localStorage.getItem("adminActivePage") as Page | null
@@ -174,19 +211,49 @@ export function AdminDashboard() {
       setIsSidebarCollapsed(true)
     }
 
+    const savedSoundPref = localStorage.getItem("adminSoundEnabled")
+    if (savedSoundPref !== null) {
+      setSoundEnabled(savedSoundPref === "true")
+      isSoundEnabledGlobal = savedSoundPref === "true"
+    }
+
     const handleNavigate = (e: CustomEvent) => {
       const page = e.detail as Page
       setActivePage(page)
       localStorage.setItem("adminActivePage", page)
     }
     window.addEventListener("navigatePage", handleNavigate as EventListener)
-    return () => window.removeEventListener("navigatePage", handleNavigate as EventListener)
+
+    // Add global click listener for button sounds
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
+        playClickSound();
+      }
+    };
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener("navigatePage", handleNavigate as EventListener)
+      document.removeEventListener('click', handleGlobalClick)
+    }
   }, [])
 
   const toggleDesktopSidebar = () => {
     const newState = !isSidebarCollapsed
     setIsSidebarCollapsed(newState)
     localStorage.setItem("adminSidebarCollapsed", newState.toString())
+  }
+
+  const toggleSound = () => {
+    const newState = !soundEnabled
+    setSoundEnabled(newState)
+    isSoundEnabledGlobal = newState
+    localStorage.setItem("adminSoundEnabled", newState.toString())
+    
+    if (newState) {
+      playClickSound() // Play the sound immediately to confirm it's back on
+    }
   }
 
   const renderPage = () => {
@@ -346,6 +413,15 @@ export function AdminDashboard() {
           >
             <Download className="h-4 w-4" />
             Export Excel
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={toggleSound}
+            title={soundEnabled ? "Mute Sounds" : "Enable Sounds"}
+          >
+            {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </Button>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
