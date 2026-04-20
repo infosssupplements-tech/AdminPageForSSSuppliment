@@ -12,7 +12,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { ArrowLeft, Pencil, Download } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeft, Pencil, Trash2, Download } from "lucide-react"
 import { exportOutOfStockToExcel } from "@/lib/export-excel"
 
 interface OutOfStockProduct {
@@ -32,6 +42,8 @@ export function OutOfStockProductsPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<OutOfStockProduct | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<OutOfStockProduct | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -97,6 +109,28 @@ export function OutOfStockProductsPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!productToDelete) return
+    
+    try {
+      const endpoint = productToDelete.type === 'Supplement' 
+        ? `/api/admin/inventory/supplements/${productToDelete._id}/`
+        : `/api/admin/inventory/sports/${productToDelete._id}/`
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        await loadProducts()
+        setDeleteOpen(false)
+        setProductToDelete(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete product:', error)
+    }
+  }
+
   const columns = [
     {
       key: "type",
@@ -140,18 +174,32 @@ export function OutOfStockProductsPage() {
       key: "actions",
       label: "ACTIONS",
       render: (product: OutOfStockProduct) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation()
-            setSelectedProduct(product)
-            setDialogOpen(true)
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedProduct(product)
+              setDialogOpen(true)
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation()
+              setProductToDelete(product)
+              setDeleteOpen(true)
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ]
@@ -202,6 +250,24 @@ export function OutOfStockProductsPage() {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Delete Product</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Are you sure you want to delete this product? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
