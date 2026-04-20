@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { Plus, Minus, Trash2, Receipt, Download, Printer, History, X, Eye } from "lucide-react"
 import { format } from "date-fns"
+import { exportBillsToExcel } from "@/lib/export-excel"
 
 interface AllProduct {
   _id: string
@@ -435,8 +436,34 @@ export function BillingPage() {
       String(product.unit ?? "").toLowerCase().includes(term)
   })
 
+  const { dailyTotal, monthlyTotal, yearlyTotal } = React.useMemo(() => {
+    const today = new Date()
+    const currentDay = today.getDate()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+
+    let daily = 0
+    let monthly = 0
+    let yearly = 0
+
+    bills.forEach(bill => {
+      const billDate = new Date(bill.created_at)
+      if (isNaN(billDate.getTime())) return
+
+      const isSameYear = billDate.getFullYear() === currentYear
+      const isSameMonth = isSameYear && billDate.getMonth() === currentMonth
+      const isSameDay = isSameMonth && billDate.getDate() === currentDay
+
+      if (isSameYear) yearly += bill.total_amount
+      if (isSameMonth) monthly += bill.total_amount
+      if (isSameDay) daily += bill.total_amount
+    })
+
+    return { dailyTotal: daily, monthlyTotal: monthly, yearlyTotal: yearly }
+  }, [bills])
+
   const getGroupedBills = () => {
-    const groups: { label: string, date: number, bills: Bill[] }[] = []
+    const groups: { label: string, date: number, bills: Bill[], totalAmount: number }[] = []
     
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -475,8 +502,9 @@ export function BillingPage() {
       const existingGroup = groups.find(g => g.label === label)
       if (existingGroup) {
         existingGroup.bills.push(bill)
+        existingGroup.totalAmount += bill.total_amount
       } else {
-        groups.push({ label, date: billDate.getTime(), bills: [bill] })
+        groups.push({ label, date: billDate.getTime(), bills: [bill], totalAmount: bill.total_amount })
       }
     })
 
@@ -508,14 +536,36 @@ export function BillingPage() {
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
             <h2 className="text-xl font-semibold text-foreground">All Bills</h2>
-            <div className="w-full sm:w-96">
+            <div className="flex w-full sm:w-auto items-center gap-2">
               <Input
                 placeholder="Search by ID, Customer, Product, or Date..."
                 value={historySearchTerm}
                 onChange={(e) => setHistorySearchTerm(e.target.value)}
+                className="w-full sm:w-80"
               />
+              <Button variant="outline" onClick={() => exportBillsToExcel(bills, allProducts)}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="flex flex-col p-4 border border-border rounded-xl bg-secondary/30 shadow-sm">
+              <span className="text-sm font-medium text-muted-foreground mb-1">Today's Sales</span>
+              <span className="text-2xl font-bold text-primary">₹{dailyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex flex-col p-4 border border-border rounded-xl bg-secondary/30 shadow-sm">
+              <span className="text-sm font-medium text-muted-foreground mb-1">This Month's Sales</span>
+              <span className="text-2xl font-bold text-primary">₹{monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex flex-col p-4 border border-border rounded-xl bg-secondary/30 shadow-sm">
+              <span className="text-sm font-medium text-muted-foreground mb-1">This Year's Sales</span>
+              <span className="text-2xl font-bold text-primary">₹{yearlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+
           <div className="border rounded-lg overflow-auto">
             <Table>
               <TableHeader>
@@ -541,7 +591,10 @@ export function BillingPage() {
                     <React.Fragment key={group.label}>
                       <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                         <TableCell colSpan={7} className="font-semibold text-foreground py-2 px-4">
-                          {group.label}
+                          <div className="flex justify-between items-center pr-2">
+                            <span>{group.label}</span>
+                            <span className="text-primary">Total: ₹{group.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                       {group.bills.map(bill => (

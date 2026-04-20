@@ -188,3 +188,62 @@ ${buildSheet("Out of Stock", flattened)}
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+export function exportBillsToExcel(bills: any[], allProducts: any[] = []): void {
+  const productLookup = new Map(allProducts.map(p => [`${p.type}-${p._id}`, p]))
+
+  const flattened: Record<string, unknown>[] = []
+  
+  bills.forEach((bill) => {
+    const dateStr = bill.created_at ? format(new Date(bill.created_at), "dd/MM/yyyy") : ""
+    const timeStr = bill.created_at ? format(new Date(bill.created_at), "hh:mm a") : ""
+    
+    if (bill.items && bill.items.length > 0) {
+      bill.items.forEach((item: any) => {
+        const p = productLookup.get(`${item.product_type}-${item.product_id}`)
+        
+        flattened.push({
+          "Date": dateStr,
+          "Time": timeStr,
+          "Bill ID": bill._id || "",
+          "Customer": bill.customer_name || "",
+          "Phone": bill.customer_phone || "",
+          "Product ID": item.product_id || "",
+          "Product Name": item.name || "",
+          "Type": item.product_type || "",
+          "Batch Code": p ? p.batch_code || "" : "",
+          "Distributor": p ? p.distributor || "" : "",
+          "Weight/Size": p ? (p.type === 'supplement' ? (p.weight && p.weight > 0 ? `${p.weight}${p.unit || ''}` : '') : (p.size || '')) : "",
+          "Qty": item.quantity || 0,
+          "Price": item.price || 0,
+          "Discount %": item.discount_percent || 0,
+          "Item Total": item.total || 0,
+          "Bill Total": bill.total_amount || 0,
+        })
+      })
+    }
+  })
+
+  const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+${buildSheet("Billing History", flattened)}
+</Workbook>`
+
+  const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8;" })
+  const now = new Date()
+  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`
+  const filename = `billing-history-${timestamp}.xls`
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
