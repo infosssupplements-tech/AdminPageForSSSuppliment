@@ -21,6 +21,7 @@ import {
   TrendingUp,
   IndianRupee,
   Download,
+  PanelLeft,
 } from "lucide-react"
 import { UsersPage } from "@/components/pages/users-page"
 import { ReferralsPage } from "@/components/pages/referrals-page"
@@ -160,11 +161,17 @@ export function AdminDashboard() {
   const router = useRouter()
   const [activePage, setActivePage] = useState<Page>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const savedPage = localStorage.getItem("adminActivePage") as Page | null
     if (savedPage) {
       setActivePage(savedPage)
+    }
+
+    const savedCollapsed = localStorage.getItem("adminSidebarCollapsed")
+    if (savedCollapsed === "true") {
+      setIsSidebarCollapsed(true)
     }
 
     const handleNavigate = (e: CustomEvent) => {
@@ -175,6 +182,12 @@ export function AdminDashboard() {
     window.addEventListener("navigatePage", handleNavigate as EventListener)
     return () => window.removeEventListener("navigatePage", handleNavigate as EventListener)
   }, [])
+
+  const toggleDesktopSidebar = () => {
+    const newState = !isSidebarCollapsed
+    setIsSidebarCollapsed(newState)
+    localStorage.setItem("adminSidebarCollapsed", newState.toString())
+  }
 
   const renderPage = () => {
     switch (activePage) {
@@ -219,8 +232,9 @@ export function AdminDashboard() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:relative lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        isSidebarCollapsed ? "lg:-ml-56" : "lg:ml-0"
       )}>
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -302,6 +316,15 @@ export function AdminDashboard() {
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden lg:flex text-muted-foreground hover:text-foreground"
+            onClick={toggleDesktopSidebar}
+            title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+          >
+            <PanelLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground capitalize">

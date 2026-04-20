@@ -15,6 +15,18 @@ function buildSheet(name: string, rows: Array<Record<string, unknown>>): string 
     .map((h) => `<Cell><Data ss:Type="String">${escapeXml(h)}</Data></Cell>`)
     .join("")
 
+  const columnsConfig = headers.map((h) => {
+    let width = 110;
+    const hLower = h.toLowerCase();
+    if (hLower.includes('name') || hLower.includes('flavor') || hLower.includes('description') || hLower.includes('json')) width = 300;
+    else if (hLower.includes('email') || hLower.includes('address')) width = 220;
+    else if (hLower.includes('id') || hLower.includes('code') || hLower.includes('distributor') || hLower.includes('category')) width = 160;
+    else if (hLower.includes('date') || hLower.includes('created') || hLower.includes('updated') || hLower.includes('mfg') || hLower.includes('exp')) width = 130;
+    else if (hLower.includes('price') || hLower.includes('total') || hLower.includes('amount') || hLower.includes('discount')) width = 100;
+    else if (hLower.includes('stock') || hLower.includes('pcs') || hLower.includes('quantity')) width = 90;
+    return `<Column ss:AutoFitWidth="0" ss:Width="${width}"/>`;
+  }).join("\n      ");
+
   const dataRows = rows
     .map((row) => {
       const cells = headers
@@ -33,6 +45,7 @@ function buildSheet(name: string, rows: Array<Record<string, unknown>>): string 
   return `
   <Worksheet ss:Name="${escapeXml(name)}">
     <Table>
+      ${columnsConfig}
       <Row>${headerRow}</Row>
       ${dataRows}
     </Table>
