@@ -287,137 +287,144 @@ export function BillingPage() {
   }
 
   const formatBillForPDF = (bill: Bill) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <title>Invoice - SS Supplements</title>
         <style>
-          @page { margin: 0; }
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 40px; color: #333; }
-          .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-          .header-left { display: flex; flex-direction: column; }
-          .header-right { text-align: right; }
-          .logo { max-height: 60px; margin-bottom: 10px; object-fit: contain; }
-          .title { font-size: 36px; font-weight: bold; color: #111; margin: 0; letter-spacing: 2px; }
-          .subtitle { font-size: 14px; color: #666; margin-top: 5px; }
-          .invoice-details { text-align: right; }
-          .invoice-details h2 { margin: 0; font-size: 24px; color: #333; }
-          .invoice-details p { margin: 5px 0 0 0; font-size: 14px; color: #555; }
-          
-          .customer-info { margin-bottom: 40px; display: flex; justify-content: space-between; }
-          .customer-info div { width: 48%; }
-          .info-title { font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px; }
-          .info-content { font-size: 15px; line-height: 1.5; }
-          
-          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-          th { background-color: #f8f9fa; padding: 12px 15px; border-bottom: 2px solid #ddd; text-align: left; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase; }
-          td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
-          tr:last-child td { border-bottom: none; }
+          @page { margin: 15mm; size: A4; }
+          body { font-family: Georgia, 'Times New Roman', Times, serif; margin: 0; padding: 0; color: #000; font-size: 12px; }
+          .invoice-box { max-width: 850px; margin: auto; padding: 20px; background: #fff; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
-          
-          .totals-box { width: 100%; display: flex; justify-content: flex-end; }
-          .totals-table { width: 300px; border-collapse: collapse; }
-          .totals-table td { padding: 10px 15px; border-bottom: 1px solid #eee; }
-          .totals-table tr:last-child td { border-bottom: 2px solid #333; font-weight: bold; font-size: 18px; color: #111; }
-          
-          .footer { margin-top: 50px; text-align: center; color: #777; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px; }
-          .footer p { margin: 5px 0; }
+          .font-bold { font-weight: bold; }
+          .font-semibold { font-weight: 600; }
+          .underline { text-decoration: underline; }
+          .mb-1 { margin-bottom: 4px; }
+          .mb-2 { margin-bottom: 8px; }
+          .mb-4 { margin-bottom: 16px; }
+          .mb-6 { margin-bottom: 24px; }
+          .mt-2 { margin-top: 8px; }
+          .mt-4 { margin-top: 16px; }
+          .mt-8 { margin-top: 32px; }
+          .text-lg { font-size: 18px; }
+          .text-base { font-size: 14px; }
+          .text-xs { font-size: 10px; }
+          p { margin: 2px 0; }
+          .flex { display: flex; }
+          .justify-between { justify-content: space-between; }
+          .justify-end { justify-content: flex-end; }
+          .w-1-2 { width: 50%; }
+          .w-2-3 { width: 66.66%; }
+          .w-1-3 { width: 33.33%; }
+          .pr-4 { padding-right: 16px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #000; padding: 6px; text-align: left; vertical-align: top; }
+          .w-48 { width: 192px; }
+          ul { margin: 4px 0 0 16px; padding: 0; }
+          li { margin-bottom: 2px; }
+          .uppercase { text-transform: uppercase; }
         </style>
       </head>
       <body>
         <div class="invoice-box">
-          <div class="header">
-            <div class="header-left">
-              <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="${baseUrl}/logo.png" alt="SS Supplements" class="logo" onerror="this.style.display='none'" />
-                <h1 class="title">SS SUPPLEMENTS</h1>
-              </div>
-              <div class="subtitle">Premium Quality Supplements & Sports Nutrition</div>
-            </div>
-            <div class="invoice-details">
-              <h2>INVOICE</h2>
-              <p><strong>Bill No:</strong> #${bill._id.substring(0, 8).toUpperCase()}</p>
-              <p><strong>Date:</strong> ${format(new Date(bill.created_at), 'dd/MM/yyyy')}</p>
-            </div>
+          <div class="text-center mb-6">
+            <h1 class="font-bold text-lg underline mb-1">INVOICE</h1>
+            <h2 class="font-bold text-base mb-1">SS SUPPLEMENTS</h2>
+            <p>Haldia, Bhabanipur (Dakshin Palli)</p>
+            <p>Near Ambuja City Center Mall</p>
+            <p>Purba Medinipur - 721657</p>
+            <p>Contact - 9547899170</p>
           </div>
           
-          <div class="customer-info">
-            <div>
-              <div class="info-title">Billed To</div>
-              <div class="info-content">
-                <strong>${bill.customer_name}</strong><br>
-                Phone: ${bill.customer_phone}<br>
-                ${bill.customer_address ? `Address: ${bill.customer_address}` : ''}
-              </div>
+          <div class="flex justify-between mb-6">
+            <div class="w-1-2 pr-4">
+              <p class="font-semibold mb-1">Bill To:</p>
+              <p class="font-bold uppercase">${bill.customer_name}</p>
+              <p>Ph: ${bill.customer_phone}</p>
+              <p>Address: ${bill.customer_address || "N/A"}</p>
+              <p>Place of Supply: West Bengal</p>
+              <p>State Code: 19</p>
             </div>
-            <div style="text-align: right;">
-              <div class="info-title">Authorized By</div>
-              <div class="info-content">
-                <strong>SS Supplements</strong><br>
-                Store Admin
-              </div>
+            <div class="w-1-2 text-right">
+              <p><span class="font-semibold">Invoice No.:</span> #${bill._id.substring(0, 8).toUpperCase()}</p>
+              <p><span class="font-semibold">Invoice Date:</span> ${format(new Date(bill.created_at), 'dd-MM-yyyy')}</p>
+              <p class="mt-4"><span class="font-semibold">Payment Mode:</span> Credit / Cash</p>
+              <p><span class="font-semibold">Amount:</span> ${bill.total_amount.toFixed(2)}</p>
             </div>
           </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th width="5%">#</th>
-              <th width="40%">Product Description</th>
-              <th width="10%" class="text-center">Qty</th>
-              <th width="15%" class="text-right">Unit Price</th>
-              <th width="10%" class="text-right">Disc %</th>
-              <th width="20%" class="text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${bill.items.map((item, index) => `
-              <tr>
-                <td>${index + 1}</td>
-                <td>
-                  <strong>${item.name}</strong><br>
-                  <span style="font-size: 12px; color: #777; text-transform: capitalize;">${item.product_type}</span>
-                </td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-right">₹${item.price.toFixed(2)}</td>
-                <td class="text-right">${item.discount_percent ? item.discount_percent + '%' : '-'}</td>
-                <td class="text-right">₹${item.total.toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+          <div class="mb-6">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th style="width: 50px;">SIZE</th>
+                  <th style="width: 50px;">Batch No.</th>
+                  <th style="width: 60px;">Rate(Rs.)</th>
+                  <th style="width: 60px;">Discount(Rs.)</th>
+                  <th style="width: 60px;">Discounted<br/>Rate(Rs.)</th>
+                  <th style="width: 40px;">QTY</th>
+                  <th style="width: 60px;">Total(Rs.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${bill.items.map((item) => {
+                  const product = allProducts.find(p => p._id === item.product_id && p.type === item.product_type);
+                  const batch = product?.batch_code || "-";
+                  const size = product?.type === 'supplement' ? (product.weight ? `${product.weight}${product.unit || ''}` : '-') : (product?.size || '-');
+                  const rate = item.price;
+                  const discPercent = item.discount_percent || 0;
+                  const discRs = rate * (discPercent / 100);
+                  const discountedRate = rate - discRs;
+                  
+                  return `
+                    <tr>
+                      <td>${item.name}</td>
+                      <td>${size}</td>
+                      <td>${batch}</td>
+                      <td>${rate.toFixed(2)}</td>
+                      <td>${discRs.toFixed(2)}</td>
+                      <td>${discountedRate.toFixed(2)}</td>
+                      <td>${item.quantity}</td>
+                      <td>${item.total.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+                <tr>
+                  <td colspan="7" class="text-right font-bold">TOTAL</td>
+                  <td class="font-bold">${bill.total_amount.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-          <div class="totals-box">
-            <table class="totals-table">
+          <div class="flex justify-end mb-6">
+            <table class="w-48">
               <tr>
-                <td>Subtotal</td>
-                <td class="text-right">₹${bill.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</td>
-              </tr>
-              ${bill.items.some(i => (i.discount_percent || 0) > 0) ? `
-              <tr>
-                <td>Total Discount</td>
-                <td class="text-right">-₹${bill.items.reduce((sum, item) => sum + (item.price * item.quantity - item.total), 0).toFixed(2)}</td>
-              </tr>
-              ` : ''}
-              <tr>
-                <td>Tax (0%)</td>
-                <td class="text-right">₹0.00</td>
-              </tr>
-              <tr>
-                <td>Grand Total</td>
-                <td class="text-right">₹${bill.total_amount.toFixed(2)}</td>
+                <td class="font-semibold">Total (Rs.)</td>
+                <td>${bill.total_amount.toFixed(2)}</td>
               </tr>
             </table>
           </div>
 
-          <div class="footer">
-            <p><strong>Thank you for choosing SS Supplements!</strong></p>
-            <p>For any queries regarding this invoice, please contact our support.</p>
-            <p>&copy; ${new Date().getFullYear()} SS Supplements. All Rights Reserved.</p>
+          <div class="flex justify-between mt-8">
+            <div class="w-2-3 pr-4">
+              <p class="font-bold mb-2">Please do not accept if the box is tampered</p>
+              <p class="text-xs mb-4" style="color: #444;">Note: This is to certify that items inside do not contain any prohibited or hazardous materials. The items are meant for personal use only and not for resale.</p>
+              <p class="font-bold underline mb-1">Terms & Conditions :</p>
+              <ul class="text-xs" style="color: #444;">
+                <li>All disputes under Haldia Jurisdiction</li>
+                <li>No Exchange and Refund</li>
+                <li>Please do not accept if the box is tampered.</li>
+              </ul>
+            </div>
+            <div class="w-1-3 text-right mt-8 text-xs">
+              <p>Digitally signed</p>
+              <p class="font-bold mt-2" style="font-size: 14px;">SS SUPPLEMENTS</p>
+              <p class="mt-2">Date: ${format(new Date(), 'yyyy.MM.dd HH:mm:ss')}</p>
+            </div>
           </div>
         </div>
       </body>
@@ -763,39 +770,119 @@ export function BillingPage() {
 
               {generatedBill ? (
                 // Display Generated Bill
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5">
-                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-                      <Receipt className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-bold text-foreground">SS SUPPLEMENTS</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Invoice Generated Successfully</p>
-                    <div className="bg-background px-4 py-2 rounded-lg border shadow-sm w-full text-center">
-                      <span className="text-xs text-muted-foreground block mb-1">Invoice Number</span>
-                      <span className="font-mono font-bold text-lg">#{generatedBill._id.substring(0, 8).toUpperCase()}</span>
-                    </div>
-                  </div>
+                <div className="space-y-4">
+                  <div className="bg-white text-black p-4 text-[10px] sm:text-xs font-serif border shadow-sm overflow-x-auto rounded">
+                    <div className="min-w-[600px] xl:min-w-full">
+                      {/* Header Section */}
+                      <div className="text-center mb-6">
+                        <h1 className="font-bold text-lg underline mb-1">INVOICE</h1>
+                        <h2 className="font-bold text-base">SS SUPPLEMENTS</h2>
+                        <p>Haldia, Bhabanipur (Dakshin Palli)</p>
+                        <p>Near Ambuja City Center Mall</p>
+                        <p>Purba Medinipur - 721657</p>
+                        <p>Contact - 9547899170</p>
+                      </div>
 
-                  <div className="space-y-4 text-sm bg-card border rounded-xl p-4">
-                    <div className="flex justify-between border-b pb-3">
-                      <span className="text-muted-foreground">Date</span>
-                      <span className="font-medium">{format(new Date(generatedBill.created_at), 'dd/MM/yyyy')}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-3">
-                      <span className="text-muted-foreground">Customer Name</span>
-                      <span className="font-medium">{generatedBill.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-3">
-                      <span className="text-muted-foreground">Phone Number</span>
-                      <span className="font-medium">{generatedBill.customer_phone}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-3">
-                      <span className="text-muted-foreground">Total Items</span>
-                      <span className="font-medium">{generatedBill.items.length} items</span>
-                    </div>
-                    <div className="flex justify-between pt-1">
-                      <span className="text-muted-foreground font-medium">Grand Total</span>
-                      <span className="text-xl font-bold text-primary">₹{generatedBill.total_amount.toLocaleString()}</span>
+                      {/* Details Section */}
+                      <div className="flex justify-between mb-6">
+                        {/* Bill To */}
+                        <div className="w-1/2 pr-4">
+                          <p className="font-semibold mb-1">Bill To:</p>
+                          <p className="font-bold uppercase">{generatedBill.customer_name}</p>
+                          <p>Ph: {generatedBill.customer_phone}</p>
+                          <p>Address: {generatedBill.customer_address || "N/A"}</p>
+                          <p>Place of Supply: West Bengal</p>
+                          <p>State Code: 19</p>
+                        </div>
+
+                        {/* Invoice Info */}
+                        <div className="w-1/2 text-right">
+                          <p><span className="font-semibold">Invoice No.:</span> #{generatedBill._id.substring(0, 8).toUpperCase()}</p>
+                          <p><span className="font-semibold">Invoice Date:</span> {format(new Date(generatedBill.created_at), 'dd-MM-yyyy')}</p>
+                          <p className="mt-4"><span className="font-semibold">Payment Mode:</span> Credit / Cash</p>
+                          <p><span className="font-semibold">Amount:</span> {generatedBill.total_amount.toFixed(2)}</p>
+                        </div>
+                      </div>
+
+                      {/* Table Section */}
+                      <div className="mb-6">
+                        <table className="w-full border-collapse border border-black text-left">
+                          <thead>
+                            <tr>
+                              <th className="border border-black p-1">Item</th>
+                              <th className="border border-black p-1 w-12">SIZE</th>
+                              <th className="border border-black p-1 w-14">Batch No.</th>
+                              <th className="border border-black p-1 w-14">Rate(Rs.)</th>
+                              <th className="border border-black p-1 w-16">Discount(Rs.)</th>
+                              <th className="border border-black p-1 w-16">Discounted<br/>Rate(Rs.)</th>
+                              <th className="border border-black p-1 w-8">QTY</th>
+                              <th className="border border-black p-1 w-16">Total(Rs.)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {generatedBill.items.map((item, index) => {
+                              const product = allProducts.find(p => p._id === item.product_id && p.type === item.product_type);
+                              const batch = product?.batch_code || "-";
+                              const size = product?.type === 'supplement' ? (product.weight ? `${product.weight}${product.unit || ''}` : '-') : (product?.size || '-');
+                              const rate = item.price;
+                              const discPercent = item.discount_percent || 0;
+                              const discRs = rate * (discPercent / 100);
+                              const discountedRate = rate - discRs;
+
+                              return (
+                                <tr key={index} className="align-top">
+                                  <td className="border border-black p-1">{item.name}</td>
+                                  <td className="border border-black p-1">{size}</td>
+                                  <td className="border border-black p-1">{batch}</td>
+                                  <td className="border border-black p-1">{rate.toFixed(2)}</td>
+                                  <td className="border border-black p-1">{discRs.toFixed(2)}</td>
+                                  <td className="border border-black p-1">{discountedRate.toFixed(2)}</td>
+                                  <td className="border border-black p-1">{item.quantity}</td>
+                                  <td className="border border-black p-1">{item.total.toFixed(2)}</td>
+                                </tr>
+                              );
+                            })}
+                            {/* Total Row */}
+                            <tr>
+                              <td colSpan={7} className="border border-black p-1 text-right font-bold">TOTAL</td>
+                              <td className="border border-black p-1 font-bold">{generatedBill.total_amount.toFixed(2)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Summary Table */}
+                      <div className="flex justify-end mb-6">
+                        <table className="border-collapse border border-black w-48 text-left">
+                          <tbody>
+                            <tr>
+                              <td className="border border-black p-1 font-semibold">Total (Rs.)</td>
+                              <td className="border border-black p-1">{generatedBill.total_amount.toFixed(2)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Footer Section */}
+                      <div className="mt-8 flex justify-between">
+                        <div className="w-2/3 pr-4">
+                          <p className="font-bold mb-2">Please do not accept if the box is tampered</p>
+                          <p className="text-[9px] mb-4 text-gray-700">Note: This is to certify that items inside do not contain any prohibited or hazardous materials. The items are meant for personal use only and not for resale.</p>
+                          
+                          <p className="font-bold underline mb-1">Terms &amp; Conditions :</p>
+                          <ul className="text-[9px] list-disc pl-4 text-gray-700">
+                            <li>All disputes under Haldia Jurisdiction</li>
+                            <li>No Exchange and Refund</li>
+                            <li>Please do not accept if the box is tampered.</li>
+                          </ul>
+                        </div>
+
+                        <div className="w-1/3 text-right mt-12 text-[10px]">
+                          <p>Digitally signed</p>
+                          <p className="font-bold mt-1 text-xs">SS SUPPLEMENTS</p>
+                          <p className="mt-1">Date: {format(new Date(), 'yyyy.MM.dd HH:mm:ss')}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
