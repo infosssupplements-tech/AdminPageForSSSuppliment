@@ -64,7 +64,7 @@ export function SupplementsProductsPage() {
         const productsWithUnits = (data.data || []).map((p: any) => ({ ...p, unit: p.unit || 'pcs', weight: p.weight || 0 }))
         const activeProducts = productsWithUnits.filter((p: SupplementProduct) => p.pcs > 0)
         setProducts(activeProducts)
-        setTotalValue(activeProducts.reduce((acc: number, curr: SupplementProduct) => acc + (curr.pcs * curr.price), 0))
+        setTotalValue(data.total_value || 0)
       }
     } catch (error) {
       console.error('Failed to load supplements:', error)

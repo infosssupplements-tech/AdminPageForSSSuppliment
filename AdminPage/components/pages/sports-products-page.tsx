@@ -57,7 +57,7 @@ export function SportsProductsPage() {
         const data = await response.json()
         const activeProducts = (data.data || []).filter((p: SportsProduct) => p.pcs > 0)
         setProducts(activeProducts)
-        setTotalValue(activeProducts.reduce((acc: number, curr: SportsProduct) => acc + (curr.pcs * curr.price), 0))
+        setTotalValue(data.total_value || 0)
       }
     } catch (error) {
       console.error('Failed to load sports products:', error)

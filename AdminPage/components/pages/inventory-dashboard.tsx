@@ -170,6 +170,8 @@ export function InventoryDashboard() {
 
   // Dynamic calculations for dashboard stats based on active in-stock products
   const calculatedTotalValue = [...supplements, ...sports].reduce((acc, curr) => acc + ((curr.pcs || 0) * (curr.price || 0)), 0);
+  const supplementTotalValue = supplements.reduce((acc, curr) => acc + ((curr.pcs || 0) * (curr.price || 0)), 0);
+  const sportsTotalValue = sports.reduce((acc, curr) => acc + ((curr.pcs || 0) * (curr.price || 0)), 0);
   
   const fiveMonthsLater = new Date();
   fiveMonthsLater.setMonth(fiveMonthsLater.getMonth() + 5);
@@ -186,7 +188,7 @@ export function InventoryDashboard() {
       </div>
 
       {/* Dashboard Buttons */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <Button
           variant="outline"
           className="h-24 flex flex-col items-center justify-center gap-2"
@@ -203,11 +205,31 @@ export function InventoryDashboard() {
 
         <Button
           variant="outline"
-          className="h-24 flex flex-col items-center justify-center gap-2"
+          className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/50"
+          onClick={() => window.dispatchEvent(new CustomEvent('navigatePage', { detail: 'supplements-products' }))}
         >
           <DollarSign className="h-8 w-8" />
-          <span className="text-sm font-medium">INVENTRY VALUE</span>
+          <span className="text-sm font-medium text-center leading-tight">INVENTORY VALUE</span>
           <span className="text-lg font-bold">₹{calculatedTotalValue.toLocaleString()}</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-chart-2/5 hover:border-chart-2/50"
+          onClick={() => window.dispatchEvent(new CustomEvent('navigatePage', { detail: 'sports-products' }))}
+        >
+          <DollarSign className="h-8 w-8 text-chart-2" />
+          <span className="text-sm font-medium text-center leading-tight">SPORTS VALUE</span>
+          <span className="text-lg font-bold text-chart-2">₹{sportsTotalValue.toLocaleString()}</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center gap-2"
+        >
+          <DollarSign className="h-8 w-8 text-primary" />
+          <span className="text-sm font-medium text-center leading-tight">SUPPLEMENTS VALUE</span>
+          <span className="text-lg font-bold text-primary">₹{supplementTotalValue.toLocaleString()}</span>
         </Button>
 
         <Button
