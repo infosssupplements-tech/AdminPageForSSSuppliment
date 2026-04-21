@@ -643,6 +643,36 @@ export function BillingPage() {
               <h2 className="text-xl font-semibold text-foreground mb-4">Customer Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    value={customerInfo.phone}
+                    onChange={e => {
+                      const newPhone = e.target.value
+                      setCustomerInfo(prev => {
+                        const updates = { ...prev, phone: newPhone }
+                        
+                        // Auto-fill logic when a full phone number is entered
+                        if (newPhone.length >= 10) {
+                          const recentBill = [...bills]
+                            .filter(b => b.customer_phone === newPhone)
+                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+                            
+                          if (recentBill) {
+                            updates.name = recentBill.customer_name
+                            updates.address = recentBill.customer_address || ''
+                          }
+                        }
+                        return updates
+                      })
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }))
+                    }}
+                    placeholder="Enter phone number"
+                    className={`mt-2 ${errors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                  />
+                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+                </div>
+                <div>
                   <Label htmlFor="name">Customer Name *</Label>
                   <Input
                     id="name"
@@ -655,20 +685,6 @@ export function BillingPage() {
                     className={`mt-2 ${errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                   />
                   {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    value={customerInfo.phone}
-                    onChange={e => {
-                      setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))
-                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }))
-                    }}
-                    placeholder="Enter phone number"
-                    className={`mt-2 ${errors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                  />
-                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="address">Address</Label>
