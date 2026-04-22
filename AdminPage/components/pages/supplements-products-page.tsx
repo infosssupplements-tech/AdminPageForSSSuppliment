@@ -368,6 +368,8 @@ function SupplementForm({ product, onSave, onCancel }: {
               <SelectItem value="kg">kg</SelectItem>
               <SelectItem value="g">g</SelectItem>
               <SelectItem value="n">n</SelectItem>
+              <SelectItem value="ml">ml</SelectItem>
+              <SelectItem value="l">l</SelectItem>
             </SelectContent>
           </Select>
         </div>
