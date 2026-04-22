@@ -80,18 +80,26 @@ export function OutOfStockProductsPage() {
         ? `/api/admin/inventory/supplements/${selectedProduct._id}/`
         : `/api/admin/inventory/sports/${selectedProduct._id}/`
 
-      const { type, ...originalData } = selectedProduct as any
-
-      const payload = {
-        ...originalData,
-        pcs: formData.pcs,
-        price: formData.price,
-        total: formData.pcs * formData.price,
-      }
-
-      if (selectedProduct.type === 'Supplement') {
-        payload.batch_code = formData.batch_code
-      }
+      const payload = selectedProduct.type === 'Supplement'
+        ? {
+            batch_code: formData.batch_code,
+            name: selectedProduct.name,
+            flavor: selectedProduct.flavor || '',
+            distributor: formData.distributor,
+            mfg_date: (selectedProduct as any).mfg_date,
+            exp_date: (selectedProduct as any).exp_date,
+            pcs: formData.pcs,
+            price: formData.price,
+            total: formData.pcs * formData.price,
+          }
+        : {
+            name: selectedProduct.name,
+            size: selectedProduct.size || '',
+            distributor: formData.distributor,
+            pcs: formData.pcs,
+            price: formData.price,
+            total: formData.pcs * formData.price,
+          }
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -103,9 +111,18 @@ export function OutOfStockProductsPage() {
         await loadProducts()
         setDialogOpen(false)
         setSelectedProduct(null)
+      } else {
+        const errorData = await response.json().catch(() => null)
+        const errorMessage = errorData?.error
+          ? typeof errorData.error === 'string'
+            ? errorData.error
+            : JSON.stringify(errorData.error)
+          : 'Failed to update product.'
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Failed to save product:', error)
+      alert('Failed to update product. Please try again.')
     }
   }
 
@@ -279,6 +296,7 @@ function EditStockForm({ product, onSave, onCancel }: {
 }) {
   const [formData, setFormData] = useState({
     batch_code: product?.batch_code || '',
+    distributor: product?.distributor || '',
     pcs: product?.pcs || 0,
     price: product?.price || 0,
   })
@@ -287,6 +305,7 @@ function EditStockForm({ product, onSave, onCancel }: {
     if (product) {
       setFormData({
         batch_code: product.batch_code || '',
+        distributor: product.distributor || '',
         pcs: product.pcs || 0,
         price: product.price || 0,
       })
@@ -308,7 +327,16 @@ function EditStockForm({ product, onSave, onCancel }: {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 mb-2">
         <span className="font-semibold text-foreground">{product.name}</span>
-        <span className="text-sm text-muted-foreground">Distributor: {product.distributor}</span>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label className="text-foreground">Distributor</Label>
+        <Input
+          value={formData.distributor}
+          onChange={e => update('distributor', e.target.value)}
+          className="bg-secondary border-border text-foreground"
+          required
+        />
       </div>
 
       {product.type === 'Supplement' && (

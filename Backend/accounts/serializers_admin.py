@@ -61,11 +61,15 @@ class ProductUpdateSerializer(_LooseDictSerializer):
 class SupplementInventorySerializer(_LooseDictSerializer):
     def validate(self, attrs):
         required_fields = ["batch_code", "name", "distributor", "mfg_date", "exp_date", "pcs", "price"]
-        missing = [field for field in required_fields if attrs.get(field) in (None, "", 0)]
+        missing = [field for field in required_fields if attrs.get(field) in (None, "")]
         if missing:
             raise serializers.ValidationError(
                 {field: ["This field is required."] for field in missing}
             )
+        if attrs.get('pcs', 0) < 0:
+            raise serializers.ValidationError({'pcs': ["PCS cannot be negative."]})
+        if attrs.get('price', 0) < 0:
+            raise serializers.ValidationError({'price': ["Price cannot be negative."]})
         # Calculate total
         pcs = attrs.get('pcs', 0)
         price = attrs.get('price', 0)
@@ -76,11 +80,15 @@ class SupplementInventorySerializer(_LooseDictSerializer):
 class SportsInventorySerializer(_LooseDictSerializer):
     def validate(self, attrs):
         required_fields = ["name", "size", "distributor", "pcs", "price"]
-        missing = [field for field in required_fields if attrs.get(field) in (None, "", 0)]
+        missing = [field for field in required_fields if attrs.get(field) in (None, "")]
         if missing:
             raise serializers.ValidationError(
                 {field: ["This field is required."] for field in missing}
             )
+        if attrs.get('pcs', 0) < 0:
+            raise serializers.ValidationError({'pcs': ["PCS cannot be negative."]})
+        if attrs.get('price', 0) < 0:
+            raise serializers.ValidationError({'price': ["Price cannot be negative."]})
         # Calculate total
         pcs = attrs.get('pcs', 0)
         price = attrs.get('price', 0)
