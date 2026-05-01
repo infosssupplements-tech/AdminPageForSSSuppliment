@@ -51,6 +51,16 @@ interface Bill {
   created_at: string
 }
 
+interface PaginatedPayload {
+  data?: unknown
+  next?: unknown
+}
+
+interface PaginatedData {
+  results?: unknown[]
+  next?: unknown
+}
+
 export function BillingPage() {
   const [allProducts, setAllProducts] = useState<AllProduct[]>([])
   const [bills, setBills] = useState<Bill[]>([])
@@ -71,24 +81,25 @@ export function BillingPage() {
     loadData()
   }, [])
 
-  const fetchAllInventoryPages = async (basePath: string) => {
+  const fetchAllInventoryPages = async (basePath: string): Promise<any[]> => {
     const merged: any[] = []
     let nextUrl: string | null = `${basePath}?page_size=200`
 
     while (nextUrl) {
-      const response = await fetch(nextUrl)
-      if (!response.ok) break
+      const pageResponse: Response = await fetch(nextUrl)
+      if (!pageResponse.ok) break
 
-      const payload = await response.json()
+      const payload: PaginatedPayload = await pageResponse.json()
       const raw = payload?.data
 
       if (Array.isArray(raw)) {
         merged.push(...raw)
         nextUrl = null
       } else {
-        const pageItems = Array.isArray(raw?.results) ? raw.results : []
+        const paginated = (raw && typeof raw === "object" ? raw : null) as PaginatedData | null
+        const pageItems = Array.isArray(paginated?.results) ? paginated.results : []
         merged.push(...pageItems)
-        const next = raw?.next || payload?.next || null
+        const next = paginated?.next || payload?.next || null
         nextUrl = next ? String(next).replace(/^https?:\/\/[^/]+/i, "") : null
       }
     }

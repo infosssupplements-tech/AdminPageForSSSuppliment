@@ -44,6 +44,18 @@ interface SupplementProduct {
   total: number
 }
 
+interface PaginatedPayload {
+  data?: unknown
+  next?: unknown
+  total_value?: unknown
+}
+
+interface PaginatedData {
+  results?: unknown[]
+  next?: unknown
+  total_value?: unknown
+}
+
 export function SupplementsProductsPage() {
   const [products, setProducts] = useState<SupplementProduct[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,26 +75,32 @@ export function SupplementsProductsPage() {
       let totalValueFromApi = 0
 
       while (nextUrl) {
-        const response = await fetch(nextUrl)
-        if (!response.ok) break
+        const pageResponse: Response = await fetch(nextUrl)
+        if (!pageResponse.ok) break
 
-        const payload = await response.json()
+        const payload: PaginatedPayload = await pageResponse.json()
         const raw = payload?.data
 
         if (Array.isArray(raw)) {
           merged.push(...raw)
           nextUrl = null
         } else {
-          const pageItems = Array.isArray(raw?.results) ? raw.results : []
+          const paginated = (raw && typeof raw === "object" ? raw : null) as PaginatedData | null
+          const pageItems = Array.isArray(paginated?.results) ? paginated.results : []
           merged.push(...pageItems)
 
-          const next = raw?.next || payload?.next || null
+          const next = paginated?.next || payload?.next || null
           nextUrl = next
             ? String(next).replace(/^https?:\/\/[^/]+/i, "")
             : null
         }
 
-        totalValueFromApi = payload?.total_value || raw?.total_value || totalValueFromApi
+        const rawTotal =
+          raw && typeof raw === "object" && "total_value" in raw
+            ? (raw as PaginatedData).total_value
+            : undefined
+        const nextTotal = payload?.total_value ?? rawTotal
+        if (typeof nextTotal === "number") totalValueFromApi = nextTotal
       }
 
       const productsWithUnits = merged.map((p: any) => ({ ...p, unit: p.unit || "pcs", weight: p.weight || 0 }))
