@@ -58,14 +58,36 @@ export function SupplementsProductsPage() {
   const loadProducts = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/inventory/supplements/')
-      if (response.ok) {
-        const data = await response.json()
-        const productsWithUnits = (data.data || []).map((p: any) => ({ ...p, unit: p.unit || 'pcs', weight: p.weight || 0 }))
-        const activeProducts = productsWithUnits.filter((p: SupplementProduct) => p.pcs > 0)
-        setProducts(activeProducts)
-        setTotalValue(data.total_value || 0)
+      let nextUrl: string | null = "/api/admin/inventory/supplements/?page_size=200"
+      const merged: any[] = []
+      let totalValueFromApi = 0
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) break
+
+        const payload = await response.json()
+        const raw = payload?.data
+
+        if (Array.isArray(raw)) {
+          merged.push(...raw)
+          nextUrl = null
+        } else {
+          const pageItems = Array.isArray(raw?.results) ? raw.results : []
+          merged.push(...pageItems)
+
+          const next = raw?.next || payload?.next || null
+          nextUrl = next
+            ? String(next).replace(/^https?:\/\/[^/]+/i, "")
+            : null
+        }
+
+        totalValueFromApi = payload?.total_value || raw?.total_value || totalValueFromApi
       }
+
+      const productsWithUnits = merged.map((p: any) => ({ ...p, unit: p.unit || "pcs", weight: p.weight || 0 }))
+      setProducts(productsWithUnits)
+      setTotalValue(totalValueFromApi)
     } catch (error) {
       console.error('Failed to load supplements:', error)
     } finally {
@@ -110,6 +132,11 @@ export function SupplementsProductsPage() {
   }
 
   const columns = [
+    {
+      key: "product_counting",
+      label: "Counting",
+      render: (_product: SupplementProduct, rowIndex: number) => rowIndex,
+    },
     {
       key: "batch_code",
       label: "BATCH CODE",
@@ -210,6 +237,7 @@ export function SupplementsProductsPage() {
           data={products}
           columns={columns}
           loading={loading}
+          pageSize={100}
           searchKeys={["name", "batch_code", "distributor", "flavor", "weight"]}
           searchPlaceholder="Search by name, batch code, distributor, flavor, weight..."
         />

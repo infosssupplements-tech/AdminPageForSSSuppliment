@@ -71,53 +71,74 @@ export function BillingPage() {
     loadData()
   }, [])
 
+  const fetchAllInventoryPages = async (basePath: string) => {
+    const merged: any[] = []
+    let nextUrl: string | null = `${basePath}?page_size=200`
+
+    while (nextUrl) {
+      const response = await fetch(nextUrl)
+      if (!response.ok) break
+
+      const payload = await response.json()
+      const raw = payload?.data
+
+      if (Array.isArray(raw)) {
+        merged.push(...raw)
+        nextUrl = null
+      } else {
+        const pageItems = Array.isArray(raw?.results) ? raw.results : []
+        merged.push(...pageItems)
+        const next = raw?.next || payload?.next || null
+        nextUrl = next ? String(next).replace(/^https?:\/\/[^/]+/i, "") : null
+      }
+    }
+
+    return merged
+  }
+
   const loadData = async () => {
     try {
       setLoading(true)
-      const [supplementsRes, sportsRes, billsRes] = await Promise.all([
-        fetch('/api/admin/inventory/supplements/'),
-        fetch('/api/admin/inventory/sports/'),
-        fetch('/api/admin/inventory/bills/'),
+      const [supplementsRaw, sportsRaw, billsRes] = await Promise.all([
+        fetchAllInventoryPages('/api/admin/inventory/supplements/'),
+        fetchAllInventoryPages('/api/admin/inventory/sports/'),
+        fetch('/api/admin/inventory/bills/?page_size=500'),
       ])
 
       const combinedProducts: AllProduct[] = []
 
-      if (supplementsRes.ok) {
-        const data = await supplementsRes.json()
-        const supplements = (data.data || []).map((p: any) => ({
-          _id: p._id,
-          name: p.name,
-          price: p.price,
-          pcs: p.pcs,
-          type: 'supplement' as const,
-          batch_code: p.batch_code,
-          distributor: p.distributor,
-          flavor: p.flavor,
-          weight: p.weight || 0,
-          unit: p.unit || 'pcs',
-        }))
-        combinedProducts.push(...supplements)
-      }
-      
-      if (sportsRes.ok) {
-        const data = await sportsRes.json()
-        const sports = (data.data || []).map((p: any) => ({
-          _id: p._id,
-          name: p.name,
-          price: p.price,
-          pcs: p.pcs,
-          type: 'sports' as const,
-          size: p.size,
-          distributor: p.distributor,
-        }))
-        combinedProducts.push(...sports)
-      }
+      const supplements = supplementsRaw.map((p: any) => ({
+        _id: p._id,
+        name: p.name,
+        price: p.price,
+        pcs: p.pcs,
+        type: 'supplement' as const,
+        batch_code: p.batch_code,
+        distributor: p.distributor,
+        flavor: p.flavor,
+        weight: p.weight || 0,
+        unit: p.unit || 'pcs',
+      }))
+      combinedProducts.push(...supplements)
+
+      const sports = sportsRaw.map((p: any) => ({
+        _id: p._id,
+        name: p.name,
+        price: p.price,
+        pcs: p.pcs,
+        type: 'sports' as const,
+        size: p.size,
+        distributor: p.distributor,
+      }))
+      combinedProducts.push(...sports)
 
       setAllProducts(combinedProducts)
 
       if (billsRes.ok) {
         const data = await billsRes.json()
-        setBills(data.data || [])
+        const billsRaw = data?.data
+        const billsList = Array.isArray(billsRaw) ? billsRaw : (Array.isArray(billsRaw?.results) ? billsRaw.results : [])
+        setBills(billsList)
       }
     } catch (error) {
       console.error('Failed to load data:', error)

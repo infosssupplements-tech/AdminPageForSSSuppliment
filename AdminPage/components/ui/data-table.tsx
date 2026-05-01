@@ -10,7 +10,7 @@ interface DataTableProps<T> {
   columns: {
     key: string
     label: string
-    render?: (item: T) => React.ReactNode
+    render?: (item: T, rowIndex: number) => React.ReactNode
     className?: string
   }[]
   searchKey?: keyof T | string
@@ -93,7 +93,9 @@ export function DataTable<T extends object>({
                 </td>
               </tr>
             ) : (
-              paginated.map((item, idx) => (
+              paginated.map((item, idx) => {
+                const rowIndex = page * pageSize + idx + 1
+                return (
                 <tr
                   key={idx}
                   onClick={() => onRowClick?.(item)}
@@ -102,12 +104,13 @@ export function DataTable<T extends object>({
                   {columns.map(col => (
                     <td key={col.key} className={`px-4 py-3 text-foreground ${col.className || ""}`}>
                       {col.render
-                        ? col.render(item)
+                        ? col.render(item, rowIndex)
                         : String((item as Record<string, unknown>)[String(col.key)] ?? "-")}
                     </td>
                   ))}
                 </tr>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>

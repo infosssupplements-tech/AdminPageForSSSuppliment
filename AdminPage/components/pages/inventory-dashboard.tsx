@@ -59,6 +59,8 @@ export function InventoryDashboard() {
   const [stats, setStats] = useState<InventoryStats | null>(null)
   const [supplements, setSupplements] = useState<InventoryProduct[]>([])
   const [sports, setSports] = useState<InventoryProduct[]>([])
+  const [allSupplements, setAllSupplements] = useState<InventoryProduct[]>([])
+  const [allSports, setAllSports] = useState<InventoryProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [outOfStock, setOutOfStock] = useState<InventoryProduct[]>([])
   const router = useRouter()
@@ -70,9 +72,10 @@ export function InventoryDashboard() {
   const loadInventoryData = async () => {
     try {
       setLoading(true)
-      const [statsRes, productsRes] = await Promise.all([
+      const [statsRes, supplementsRes, sportsRes] = await Promise.all([
         fetch('/api/admin/inventory/dashboard/'),
-        fetch('/api/admin/inventory/total-products/')
+        fetch('/api/admin/inventory/supplements/?page_size=500'),
+        fetch('/api/admin/inventory/sports/?page_size=500')
       ])
 
       if (statsRes.ok) {
@@ -80,20 +83,31 @@ export function InventoryDashboard() {
         setStats(statsData.data)
       }
 
-      if (productsRes.ok) {
-        const productsData = await productsRes.json()
-        const allSupplements = productsData.data.supplements || []
-        const allSports = productsData.data.sports || []
+      const supplementsData = supplementsRes.ok ? await supplementsRes.json() : { data: [] }
+      const sportsData = sportsRes.ok ? await sportsRes.json() : { data: [] }
+      const supplementsRaw = supplementsData?.data
+      const sportsRaw = sportsData?.data
+      const allSupplements = Array.isArray(supplementsRaw)
+        ? supplementsRaw
+        : Array.isArray(supplementsRaw?.results)
+          ? supplementsRaw.results
+          : []
+      const allSports = Array.isArray(sportsRaw)
+        ? sportsRaw
+        : Array.isArray(sportsRaw?.results)
+          ? sportsRaw.results
+          : []
 
-        setSupplements(allSupplements.filter((p: InventoryProduct) => p.pcs > 0))
-        setSports(allSports.filter((p: InventoryProduct) => p.pcs > 0))
-        
-        const oos = [
-          ...allSupplements.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Supplement' })),
-          ...allSports.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Sports' }))
-        ]
-        setOutOfStock(oos)
-      }
+      setAllSupplements(allSupplements)
+      setAllSports(allSports)
+      setSupplements(allSupplements.filter((p: InventoryProduct) => p.pcs > 0))
+      setSports(allSports.filter((p: InventoryProduct) => p.pcs > 0))
+
+      const oos = [
+        ...allSupplements.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Supplement' })),
+        ...allSports.filter((p: InventoryProduct) => p.pcs <= 0).map((p: InventoryProduct) => ({ ...p, type: 'Sports' }))
+      ]
+      setOutOfStock(oos)
     } catch (error) {
       console.error('Failed to load inventory data:', error)
     } finally {
@@ -194,13 +208,13 @@ export function InventoryDashboard() {
           className="h-24 flex flex-col items-center justify-center gap-2"
           onClick={() => {
             // Show total products modal or navigate
-            const totalProducts = (supplements.length + sports.length)
+            const totalProducts = (allSupplements.length + allSports.length)
             alert(`Total Products Available: ${totalProducts}`)
           }}
         >
           <Package className="h-8 w-8" />
           <span className="text-sm font-medium">TOTAL PRODUCTS</span>
-          <span className="text-lg font-bold">{supplements.length + sports.length}</span>
+          <span className="text-lg font-bold">{allSupplements.length + allSports.length}</span>
         </Button>
 
         <Button

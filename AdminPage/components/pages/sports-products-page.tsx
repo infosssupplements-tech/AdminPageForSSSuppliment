@@ -55,8 +55,7 @@ export function SportsProductsPage() {
       const response = await fetch('/api/admin/inventory/sports/')
       if (response.ok) {
         const data = await response.json()
-        const activeProducts = (data.data || []).filter((p: SportsProduct) => p.pcs > 0)
-        setProducts(activeProducts)
+        setProducts(data.data || [])
         setTotalValue(data.total_value || 0)
       }
     } catch (error) {
