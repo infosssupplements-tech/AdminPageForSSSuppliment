@@ -3,11 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { AlertCircle, Eye, EyeOff, Lock, Mail, Dumbbell } from "lucide-react"
+import { AlertCircle, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Sparkles, X } from "lucide-react"
 
 export function LoginForm() {
   const { login } = useAuth()
@@ -17,118 +13,95 @@ export function LoginForm() {
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showOtpPreview, setShowOtpPreview] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     setError("")
     setIsLoading(true)
 
     const success = await login(email.trim(), password)
-    
     if (success) {
-      router.push('/admin/dashboard') // Redirect to dashboard
+      router.push("/admin/dashboard")
       router.refresh()
     } else {
-      setError("Invalid email or password")
+      setError("We could not verify those credentials. Please try again.")
     }
-    
     setIsLoading(false)
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-      </div>
+    <main className="auth-page">
+      <div className="auth-grid" aria-hidden="true" />
+      <header className="auth-header">
+        <div className="brand-lockup">
+          <span className="brand-mark"><span /><span /></span>
+          <span>
+            <strong>SS Supplement</strong>
+            <small>OPERATIONS / CONTROL</small>
+          </span>
+        </div>
+        <div className="secure-badge"><ShieldCheck size={15} /> Secure workspace</div>
+      </header>
 
-      <Card className="relative z-10 w-full max-w-md border-border bg-card">
-        <CardHeader className="flex flex-col items-center gap-4 pb-2 pt-8">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-            <Dumbbell className="h-7 w-7 text-primary" />
+      <section className="auth-card" aria-label="SS Supplement admin sign in">
+        <div className="auth-story">
+          <div className="story-topline"><Sparkles size={14} /> THE DAILY CONTROL ROOM</div>
+          <div className="story-copy">
+            <h1>Keep every<br /><em>shop in shape.</em></h1>
+            <p>One calm space for products, stock, invoices, and the decisions that keep SS Supplement moving.</p>
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">SSSupplement</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Admin Dashboard</p>
+          <div className="story-checks">
+            <span><Check size={15} /> Live inventory visibility</span>
+            <span><Check size={15} /> Shop-level control</span>
+            <span><Check size={15} /> Audit-ready records</span>
           </div>
-        </CardHeader>
-        <CardContent className="px-8 pb-8 pt-4">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
+          <div className="story-orbit orbit-one" />
+          <div className="story-orbit orbit-two" />
+        </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email Address
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="khutiasudip@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+        <div className="auth-form-panel">
+          <button className="close-button" type="button" aria-label="Close sign in" onClick={() => setShowOtpPreview(false)}>
+            <X size={19} />
+          </button>
+          <div className="form-heading">
+            <span className="eyebrow">WELCOME BACK</span>
+            <h2>Good to see you.</h2>
+            <p>Sign in to manage your supplement business.</p>
+          </div>
+
+          {showOtpPreview ? (
+            <div className="otp-preview">
+              <div className="otp-icon"><ShieldCheck size={22} /></div>
+              <span className="eyebrow">ONE SMALL STEP</span>
+              <h2>Check your inbox.</h2>
+              <p>When email OTP verification is enabled on the backend, the six-digit code will be sent to your registered admin email.</p>
+              <div className="otp-placeholder" aria-label="Verification code preview">0 0 0 0 0 0</div>
+              <button type="button" className="primary-action" onClick={() => setShowOtpPreview(false)}>Back to sign in <ArrowRight size={17} /></button>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                  disabled={isLoading}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          ) : (
+            <form onSubmit={handleSubmit} className="auth-form">
+              {error && <div className="form-error" role="alert"><AlertCircle size={17} /> {error}</div>}
+              <label htmlFor="email">Admin email</label>
+              <div className="input-wrap">
+                <Mail size={17} /><input id="email" type="email" placeholder="info.sssupplements@gmail.com" value={email} onChange={(event) => setEmail(event.target.value)} required disabled={isLoading} />
+              </div>
+              <label htmlFor="password">Password</label>
+              <div className="input-wrap">
+                <LockKeyhole size={17} /><input id="password" type={showPassword ? "text" : "password"} placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} required disabled={isLoading} />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Signing in...
-                </div>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              Default: khutiasudip@gmail.com / 9547899170
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+              <div className="form-meta"><label className="remember"><input type="checkbox" /> <span>Remember this device</span></label><button type="button" className="text-button">Forgot password?</button></div>
+              <button className="primary-action" type="submit" disabled={isLoading}>{isLoading ? "Checking access…" : "Sign in to workspace"}<ArrowRight size={17} /></button>
+              <button type="button" className="otp-link" onClick={() => setShowOtpPreview(true)}><ShieldCheck size={15} /> View email verification flow</button>
+            </form>
+          )}
+          <p className="form-footer">Authorized SS Supplement personnel only.</p>
+        </div>
+      </section>
+      <footer className="auth-footer"><span>SSS / 2026</span><span>Inventory · Billing · Dispatch</span></footer>
+    </main>
   )
 }
