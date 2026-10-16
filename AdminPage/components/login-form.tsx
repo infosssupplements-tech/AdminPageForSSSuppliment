@@ -14,6 +14,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showOtpPreview, setShowOtpPreview] = useState(false)
+  const [workspaceRole, setWorkspaceRole] = useState<"admin" | "employee">("admin")
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -22,7 +23,7 @@ export function LoginForm() {
 
     const success = await login(email.trim(), password)
     if (success) {
-      router.push("/admin/dashboard")
+      router.push(workspaceRole === "admin" ? "/admin/dashboard" : "/employee")
       router.refresh()
     } else {
       setError("We could not verify those credentials. Please try again.")
@@ -80,7 +81,12 @@ export function LoginForm() {
               <button type="button" className="primary-action" onClick={() => setShowOtpPreview(false)}>Back to sign in <ArrowRight size={17} /></button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="auth-form">
+            <>
+              <div className="role-selector" aria-label="Choose workspace">
+                <button type="button" className={workspaceRole === "admin" ? "selected" : ""} onClick={() => setWorkspaceRole("admin")}>Admin workspace</button>
+                <button type="button" className={workspaceRole === "employee" ? "selected" : ""} onClick={() => setWorkspaceRole("employee")}>Employee workspace</button>
+              </div>
+              <form onSubmit={handleSubmit} className="auth-form">
               {error && <div className="form-error" role="alert"><AlertCircle size={17} /> {error}</div>}
               <label htmlFor="email">Admin email</label>
               <div className="input-wrap">
@@ -96,7 +102,8 @@ export function LoginForm() {
               <div className="form-meta"><label className="remember"><input type="checkbox" /> <span>Remember this device</span></label><button type="button" className="text-button">Forgot password?</button></div>
               <button className="primary-action" type="submit" disabled={isLoading}>{isLoading ? "Checking access…" : "Sign in to workspace"}<ArrowRight size={17} /></button>
               <button type="button" className="otp-link" onClick={() => setShowOtpPreview(true)}><ShieldCheck size={15} /> View email verification flow</button>
-            </form>
+              </form>
+            </>
           )}
           <p className="form-footer">Authorized SS Supplement personnel only.</p>
         </div>
