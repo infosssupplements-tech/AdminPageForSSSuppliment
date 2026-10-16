@@ -1,29 +1,25 @@
 "use client"
 
 import { AuthProvider, useAuth } from "@/lib/auth-context"
-import { LoginForm } from "@/components/login-form"
+import { HomePage } from "@/components/home-page"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
-function AppContent() {
+function HomeContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/admin/dashboard")
+      router.replace("/admin/dashboard")
       router.refresh()
     }
   }, [isAuthenticated, isLoading, router])
 
-  if (isLoading) return null
-  return <LoginForm />
+  if (isLoading || isAuthenticated) return null
+  return <HomePage />
 }
 
 export default function Home() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  )
+  return <AuthProvider><HomeContent /></AuthProvider>
 }
