@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 type AuthContextType = {
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<"admin" | "employee" | null>
   logout: () => Promise<void>
 }
 
@@ -44,13 +44,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      if (!res.ok) return false
+      if (!res.ok) return null
 
-      // Token is set as httpOnly cookie by the API route
+      const data = (await res.json()) as { role?: string; user?: { role?: string } }
+      const role = data.role ?? data.user?.role
+      if (role !== "admin" && role !== "employee") return null
+
       setIsAuthenticated(true)
-      return true
+      return role
     } catch {
-      return false
+      return null
     }
   }
 

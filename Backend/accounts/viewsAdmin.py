@@ -114,6 +114,7 @@ class LoginView(APIView):
                 token = generate_token(admin)
                 response = Response({
                     'success': True,
+                    'role': 'admin',
                     'token': token,
                     'admin': {
                         '_id': str(admin.get('_id', '')),

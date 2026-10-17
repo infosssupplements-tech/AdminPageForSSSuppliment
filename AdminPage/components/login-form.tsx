@@ -14,19 +14,18 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showOtpPreview, setShowOtpPreview] = useState(false)
-  const [workspaceRole, setWorkspaceRole] = useState<"admin" | "employee">("admin")
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError("")
     setIsLoading(true)
 
-    const success = await login(email.trim(), password)
-    if (success) {
-      router.push(workspaceRole === "admin" ? "/admin/dashboard" : "/employee")
+    const role = await login(email.trim(), password)
+    if (role) {
+      router.push(role === "employee" ? "/employee/dashboard" : "/admin/dashboard")
       router.refresh()
     } else {
-      setError("We could not verify those credentials. Please try again.")
+      setError("We could not verify those credentials or determine your workspace access.")
     }
     setIsLoading(false)
   }
@@ -82,13 +81,9 @@ export function LoginForm() {
             </div>
           ) : (
             <>
-              <div className="role-selector" aria-label="Choose workspace">
-                <button type="button" className={workspaceRole === "admin" ? "selected" : ""} onClick={() => setWorkspaceRole("admin")}>Admin workspace</button>
-                <button type="button" className={workspaceRole === "employee" ? "selected" : ""} onClick={() => setWorkspaceRole("employee")}>Employee workspace</button>
-              </div>
               <form onSubmit={handleSubmit} className="auth-form">
               {error && <div className="form-error" role="alert"><AlertCircle size={17} /> {error}</div>}
-              <label htmlFor="email">Admin email</label>
+              <label htmlFor="email">Registered email</label>
               <div className="input-wrap">
                 <Mail size={17} /><input id="email" type="email" placeholder="info.sssupplements@gmail.com" value={email} onChange={(event) => setEmail(event.target.value)} required disabled={isLoading} />
               </div>
